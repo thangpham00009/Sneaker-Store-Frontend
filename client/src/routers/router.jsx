@@ -19,6 +19,8 @@ import PaymentMethodsPage from "../pages/admin/payment/PaymentMethodsPage.jsx";
 import PromotionsPage from "../pages/admin/promotions/PromotionsPage.jsx";
 import EditCategoryPage from "../pages/admin/categories/EditCategoryPage.jsx";
 import CategoryDetailPage from "../pages/admin/categories/CategoryDetailPage.jsx";
+import EditBrandPage from "../pages/admin/brands/EditBrandPage.jsx";
+import BrandDetailPage from "../pages/admin/brands/BrandDetailPage.jsx";
 
 export const routes = [
   {
@@ -221,16 +223,26 @@ export const routes = [
       </ProtectedRoute>
     ),
   },
-  // {
-  //   path: "/admin/brands/:brandId/edit",
-  //   element: (
-  //     <ProtectedRoute>
-  //       <AdminLayout>
-  //         <EditBrandPage />
-  //       </AdminLayout>
-  //     </ProtectedRoute>
-  //   ),
-  // },
+  {
+    path: "/admin/brands/:brandId/edit",
+    element: (
+      <ProtectedRoute>
+        <AdminLayout>
+          <EditBrandPage />
+        </AdminLayout>
+      </ProtectedRoute>
+    ),
+  },
+    {
+    path: "/admin/brands/:brandId",
+    element: (
+      <ProtectedRoute>
+        <AdminLayout>
+          <BrandDetailPage />
+        </AdminLayout>
+      </ProtectedRoute>
+    ),
+  },
 
   // Catch all - redirect to home
   {

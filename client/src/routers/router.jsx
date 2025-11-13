@@ -4,37 +4,21 @@ import AdminLogin from "../pages/AdminLogin.jsx";
 import AdminDashboard from "../pages/AdminDashboard.jsx";
 import ProtectedRoute from "../components/ProtectedRoute.jsx";
 import AdminLayout from "../components/admin/AdminLayout.jsx";
-
-// Admin Pages - Products
 import ProductsPage from "../pages/admin/products/ProductsPage.jsx";
 import AddProductPage from "../pages/admin/products/AddProductPage.jsx";
-
-// Admin Pages - Categories
 import CategoriesPage from "../pages/admin/categories/CategoriesPage.jsx";
 import AddCategoryPage from "../pages/admin/categories/AddCategoryPage.jsx";
-
-// Admin Pages - Brands
 import BrandsPage from "../pages/admin/brands/BrandsPage.jsx";
 import AddBrandPage from "../pages/admin/brands/AddBrandPage.jsx";
-
-// Admin Pages - Orders
 import OrdersPage from "../pages/admin/orders/OrdersPage.jsx";
-
-// Admin Pages - Customers
 import CustomersPage from "../pages/admin/customers/CustomersPage.jsx";
-
-// Admin Pages - Warehouse
 import InventoryPage from "../pages/admin/warehouse/InventoryPage.jsx";
 import WarehouseHistoryPage from "../pages/admin/warehouse/WarehouseHistoryPage.jsx";
-
-// Admin Pages - Invoices
 import InvoicesPage from "../pages/admin/invoices/InvoicesPage.jsx";
-
-// Admin Pages - Payment
 import PaymentMethodsPage from "../pages/admin/payment/PaymentMethodsPage.jsx";
-
-// Admin Pages - Promotions
 import PromotionsPage from "../pages/admin/promotions/PromotionsPage.jsx";
+import EditCategoryPage from "../pages/admin/categories/EditCategoryPage.jsx";
+import CategoryDetailPage from "../pages/admin/categories/CategoryDetailPage.jsx";
 
 export const routes = [
   {
@@ -195,6 +179,26 @@ export const routes = [
       </ProtectedRoute>
     ),
   },
+    {
+    path: "/admin/categories/:categoryId",
+    element: (
+      <ProtectedRoute>
+        <AdminLayout>
+          <CategoryDetailPage />
+        </AdminLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/categories/:categoryId/edit",
+    element: (
+      <ProtectedRoute>
+        <AdminLayout>
+          <EditCategoryPage />
+        </AdminLayout>
+      </ProtectedRoute>
+    ),
+  },
 
   // Brands Routes
   {
@@ -217,6 +221,16 @@ export const routes = [
       </ProtectedRoute>
     ),
   },
+  // {
+  //   path: "/admin/brands/:brandId/edit",
+  //   element: (
+  //     <ProtectedRoute>
+  //       <AdminLayout>
+  //         <EditBrandPage />
+  //       </AdminLayout>
+  //     </ProtectedRoute>
+  //   ),
+  // },
 
   // Catch all - redirect to home
   {

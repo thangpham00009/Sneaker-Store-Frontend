@@ -21,6 +21,8 @@ import EditCategoryPage from "../pages/admin/categories/EditCategoryPage.jsx";
 import CategoryDetailPage from "../pages/admin/categories/CategoryDetailPage.jsx";
 import EditBrandPage from "../pages/admin/brands/EditBrandPage.jsx";
 import BrandDetailPage from "../pages/admin/brands/BrandDetailPage.jsx";
+import UpdateProductPage from "@/pages/admin/products/UpdateProductPage.jsx";
+import ProductDetailPage from "@/pages/admin/products/ProductDetailPage.jsx";
 
 export const routes = [
   {
@@ -73,6 +75,27 @@ export const routes = [
       </ProtectedRoute>
     ),
   },
+   {
+    path: "/admin/products/:productId/edit",
+    element: (
+      <ProtectedRoute>
+        <AdminLayout>
+          <UpdateProductPage />
+        </AdminLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/products/:productId",
+    element: (
+      <ProtectedRoute>
+        <AdminLayout>
+          <ProductDetailPage />
+        </AdminLayout>
+      </ProtectedRoute>
+    ),
+  },
+
 
   // Warehouse Routes
   {

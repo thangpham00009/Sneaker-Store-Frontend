@@ -27,7 +27,7 @@ export default function EditBrandPage() {
   useEffect(() => {
     const fetchBrand = async () => {
       try {
-        const res = await brandAPI.getBySlug(brandId);
+        const res = await brandAPI.getById(brandId);
         const brand = res.data.data;
         setName(brand.name || "");
         setSlug(brand.slug || "");

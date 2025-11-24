@@ -1,19 +1,22 @@
 import { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { checkAuthStatus } from "./redux/slices/authSlice";
+import { checkAuthStatus } from "./redux/slices/authSlice"; // admin
+import { checkUserAuth  } from "./redux/slices/userAuthSlice"; // client
 import Loading from "./components/Loading";
 import { routes } from "./routers/router";
 
 function App() {
   const dispatch = useDispatch();
-  const { checkingAuth } = useSelector((state) => state.auth);
+  const adminChecking = useSelector((state) => state.auth.checkingAuth);
+  const userChecking = useSelector((state) => state.userAuth.checkUserAuth);
 
   useEffect(() => {
-    dispatch(checkAuthStatus());
+    dispatch(checkAuthStatus()); 
+    dispatch(checkUserAuth());   
   }, [dispatch]);
 
-  if (checkingAuth) {
+  if (adminChecking || userChecking) {
     return <Loading />;
   }
 

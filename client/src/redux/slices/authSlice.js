@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { adminAPI } from "../../api/admin.api";
-import { hasRefreshToken } from "../../services/cookieUtils";
+import { hasAdminRefreshToken } from "../../services/cookieUtils";
 
 export const loginAdmin = createAsyncThunk(
   "auth/loginAdmin",
@@ -41,7 +41,7 @@ export const checkAuthStatus = createAsyncThunk(
       return rejectWithValue("Not authenticated");
     } catch (error) {
       if (error.response?.status === 401) {
-        if (hasRefreshToken()) {
+        if (hasAdminRefreshToken()) {
           try {
             await adminAPI.refreshToken();
             const retry = await adminAPI.getProfile();

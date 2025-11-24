@@ -6,4 +6,5 @@ export const adminAPI = {
   logout: () => apiClient.post("/admin/logout"),
   getProfile: () => apiClient.get("/admin/profile"),
   refreshToken: () => apiClient.post("/admin/refresh-token"),
+  getById: (id) => apiClient.get(`/admin/id/${id}`),
 };

@@ -1,6 +1,7 @@
 import { apiClient } from "./apiClient";
 import { adminAPI } from "../api/admin.api";
-import { hasRefreshToken } from "./cookieUtils";
+import { userAPI } from "../api/user.api";
+import { hasUserRefreshToken, hasAdminRefreshToken } from "./cookieUtils";
 
 export const setupAxiosInterceptors = () => {
   apiClient.interceptors.response.use(
@@ -15,15 +16,27 @@ export const setupAxiosInterceptors = () => {
       ) {
         originalRequest._retry = true;
 
-        if (hasRefreshToken()) {
+        // Admin
+        if (originalRequest.url.includes("/admin") && hasAdminRefreshToken()) {
           try {
             await adminAPI.refreshToken();
             return apiClient(originalRequest);
           } catch (refreshError) {
-            console.error("Phiên đăng nhập hết hạn, vui lòng đăng nhập lại!");
+            console.error("Admin session expired, please login again!");
+          }
+        }
+
+        // User
+        if (!originalRequest.url.includes("/user") && hasUserRefreshToken()) {
+          try {
+            await userAPI.refreshToken();
+            return apiClient(originalRequest);
+          } catch (refreshError) {
+            console.error("User session expired, please login again!");
           }
         }
       }
+
       return Promise.reject(error);
     }
   );

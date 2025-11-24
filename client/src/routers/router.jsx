@@ -1,7 +1,7 @@
 import { Navigate } from "react-router-dom";
-import Home from "../components/Home.jsx";
-import AdminLogin from "../pages/AdminLogin.jsx";
-import AdminDashboard from "../pages/AdminDashboard.jsx";
+import Home from "../pages/client/Home.jsx";
+import AdminLogin from "../pages/admin/AdminLogin.jsx";
+import AdminDashboard from "../pages/admin/AdminDashboard.jsx";
 import ProtectedRoute from "../components/ProtectedRoute.jsx";
 import AdminLayout from "../components/admin/AdminLayout.jsx";
 import ProductsPage from "../pages/admin/products/ProductsPage.jsx";
@@ -23,18 +23,50 @@ import EditBrandPage from "../pages/admin/brands/EditBrandPage.jsx";
 import BrandDetailPage from "../pages/admin/brands/BrandDetailPage.jsx";
 import UpdateProductPage from "@/pages/admin/products/UpdateProductPage.jsx";
 import ProductDetailPage from "@/pages/admin/products/ProductDetailPage.jsx";
+import ProtectedRouteUser from "@/components/ProtectedRouteUser.jsx";
+import Login from "@/pages/client/Login.jsx";
+import ProfilePage from "@/pages/client/ProfilePage.jsx";
+import Register from "@/pages/client/Register.jsx";
+import CartPage from "@/pages/client/CartPage.jsx";
+import ProductDetail from "@/pages/client/ProductDetail.jsx";
 
 export const routes = [
+  //Client 
   {
     path: "/",
-    element: <Home />,
+    element: <Home />
   },
+  {
+    path: "/login",
+    element: <Login />,
+  },
+    {
+    path: "/register",
+    element: <Register />,
+  },
+  {
+    path: "/profile",
+    element: (
+      <ProtectedRouteUser>
+        <ProfilePage />
+      </ProtectedRouteUser>
+    ),
+  },
+  {
+    path:"/cart",
+    element:(
+        <CartPage />
+    )
+  },
+  {
+    path: "/san-pham/:slug",
+    element: <ProductDetail />,
+  },
+  // Admin Dashboard Routes
   {
     path: "/admin/login",
     element: <AdminLogin />,
   },
-
-  // Admin Dashboard Routes
   {
     path: "/admin/dashboard",
     element: (
@@ -75,7 +107,7 @@ export const routes = [
       </ProtectedRoute>
     ),
   },
-   {
+  {
     path: "/admin/products/:productId/edit",
     element: (
       <ProtectedRoute>
@@ -95,7 +127,6 @@ export const routes = [
       </ProtectedRoute>
     ),
   },
-
 
   // Warehouse Routes
   {
@@ -204,7 +235,7 @@ export const routes = [
       </ProtectedRoute>
     ),
   },
-    {
+  {
     path: "/admin/categories/:categoryId",
     element: (
       <ProtectedRoute>
@@ -256,7 +287,7 @@ export const routes = [
       </ProtectedRoute>
     ),
   },
-    {
+  {
     path: "/admin/brands/:brandId",
     element: (
       <ProtectedRoute>

@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
 
@@ -6,70 +6,62 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { Link } from "react-router-dom";
-
-const products = [
-  {
-    id: 1,
-    img: "https://bizweb.dktcdn.net/thumb/1024x1024/100/370/487/products/66fb70a7-91cf-425a-b0b4-e627278def92.jpg?v=1748081240900",
-    name: "KÍNH ZARA BLACK/BL",
-    price: 250000,
-    oldPrice: 650000,
-    discount: 62,
-    slug: "kinh-zara-black-bl"
-  },
-  {
-    id: 2,
-    img: "https://i.imgur.com/fy5ZsCn.jpeg",
-    name: "NÓN NIKE BLACK/W/R UNISSEX",
-    price: 220000,
-    oldPrice: 520000,
-    discount: 58,
-    slug: "non-nike-black-w-r-unisex"
-  },
-  {
-    id: 3,
-    img: "https://i.imgur.com/OkpF0fC.jpeg",
-    name: "ÁO ADLV x BURIED ALIVE WHITE",
-    price: 300000,
-    oldPrice: 850000,
-    discount: 65,
-    slug: "ao-adlv-x-buried-alive-white"
-  },
-  {
-    id: 4,
-    img: "https://i.imgur.com/6IUbKfK.jpeg",
-    name: "COMBO 3 Vớ Nike Drift White",
-    price: 170000,
-    oldPrice: 300000,
-    discount: 43,
-    slug: "combo-3-vo-nike-drift-white"
-  },
-  {
-    id: 5,
-    img: "https://i.imgur.com/6IUbKfK.jpeg",
-    name: "COMBO 3 Vớ Nike Drift White",
-    price: 170000,
-    oldPrice: 300000,
-    discount: 43,
-    slug: "combo-3-vo-nike-drift-white"
-  },
-];
+import { useCart } from "@/context/CartProvider";
+import productAPI from "@/api/product.api";
+import defaultImage from "../../../assets/default.jpg";
 
 const ProductSlider = () => {
   const prevRef = useRef(null);
   const nextRef = useRef(null);
+  const { addToCart } = useCart();
+
+  const [apiProducts, setApiProducts] = useState([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await productAPI.getAll();
+        const data = res.data.data.data;
+
+        const productsWithDiscount = data.map((p) => {
+          const price = p.price || 0;
+          const discountPrice = p.discountPrice || p.price || 0;
+
+          const discount =
+            p.discountPrice && p.discountPrice < p.price
+              ? Math.round(((p.price - p.discountPrice) / p.price) * 100)
+              : 0;
+
+          return {
+            ...p,
+            price,
+            discountPrice,
+            discount,
+            img:
+              p.images?.length > 0
+                ? p.images.find((i) => i.isDefault)?.url || p.images[0].url
+                : defaultImage,
+          };
+        });
+
+        setApiProducts(productsWithDiscount);
+      } catch (error) {
+        console.error("Load sản phẩm lỗi:", error);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   return (
-    <div className="container mx-auto py-10 relative">
-      {/* Tiêu đề slider */}
-      <div className="text-center mb-8">
-        <h2 className="text-2xl md:text-3xl font-bold relative pb-4 inline-block">
+    <div className="container relative py-10 mx-auto">
+      <div className="mb-8 text-center">
+        <h2 className="relative inline-block pb-4 text-2xl font-bold md:text-3xl">
           SINCE 2016 IN SAIGON
-          <span className="absolute left-1/2 transform -translate-x-1/2 bottom-0 w-12 h-1 bg-blue-400 rounded"></span>
+          <span className="absolute bottom-0 w-12 h-1 transform -translate-x-1/2 bg-blue-400 rounded left-1/2"></span>
         </h2>
       </div>
 
-      {/* Slider */}
       <Swiper
         modules={[Navigation, Pagination]}
         navigation={{
@@ -89,68 +81,77 @@ const ProductSlider = () => {
           1280: { slidesPerView: 4 },
         }}
       >
-        {products.map((item) => (
-         <SwiperSlide key={item.id}>
-    <div className="relative bg-white shadow-md rounded-md overflow-hidden group">
-        {/* Discount badge */}
-        <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full z-20">
-        -{item.discount}%
-        </div>
+        {apiProducts.map((item) => (
+          <SwiperSlide key={item.id}>
+            <div className="relative overflow-hidden bg-white rounded-md shadow-md group">
+              {/* Discount badge */}
+              {item.discount > 0 && (
+                <div className="absolute z-20 px-2 py-1 text-xs font-bold text-white bg-red-500 rounded-full top-2 right-2">
+                  -{item.discount}%
+                </div>
+              )}
 
-        {/* Image */}
-        <div className="relative">
-        <img
-            src={item.img}
-            alt={item.name}
-            className="w-full h-64 object-cover transition duration-300 group-hover:brightness-75"
-        />
+              {/* Image */}
+              <div className="relative">
+                <img
+                  src={item.img}
+                  alt={item.name}
+                  className="object-cover w-full h-64 transition duration-300 group-hover:brightness-75"
+                />
 
-        {/* Hover Buttons */}
-        <div className="
-            absolute inset-0 flex flex-col gap-2 items-center justify-center 
-            opacity-0 group-hover:opacity-100 
-            translate-y-4 group-hover:translate-y-0 
-            transition-all duration-300 z-30
-        ">
-            <Link
-                to={`/san-pham/${item.slug}`}
-                className="w-32 py-2 bg-white border rounded-md text-gray-800 font-semibold shadow hover:bg-gray-100 text-center"
+                {/* Hover Buttons */}
+                <div
+                  className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-2 transition-all duration-300 translate-y-4 opacity-0 group-hover:opacity-100 group-hover:translate-y-0"
                 >
-                Tùy chọn
-            </Link>
+                  <Link
+                    to={`/san-pham/${item.slug}`}
+                    className="w-32 py-2 font-semibold text-center text-gray-800 bg-white border rounded-md shadow hover:bg-gray-100"
+                  >
+                    Tùy chọn
+                  </Link>
 
+                  <button
+                    className="w-32 py-2 font-semibold text-white bg-blue-500 rounded-md shadow hover:bg-blue-600"
+                    onClick={() => addToCart(item, 1)}
+                  >
+                    Mua nhanh
+                  </button>
+                </div>
+              </div>
 
-            <button className="w-32 py-2 bg-blue-500 text-white rounded-md font-semibold shadow hover:bg-blue-600">
-            Mua nhanh
-            </button>
-        </div>
-        </div>
+              {/* Info */}
+              <div className="p-4 text-center">
+                <h3 className="text-sm font-semibold md:text-base">
+                  {item.name}
+                </h3>
 
-        {/* Info */}
-        <div className="p-4 text-center">
-        <h3 className="font-semibold text-sm md:text-base">{item.name}</h3>
-        <div className="mt-2">
-            <span className="text-red-500 font-bold">{item.price.toLocaleString()}₫</span>
-            <span className="text-gray-400 line-through ml-2">
-            {item.oldPrice.toLocaleString()}₫
-            </span>
-        </div>
-        </div>
-    </div>
-</SwiperSlide>
+                <div className="mt-2">
+                  <span className="font-bold text-red-500">
+                    {item.discountPrice.toLocaleString()}₫
+                  </span>
 
+                  {item.discount > 0 && (
+                    <span className="ml-2 text-gray-400 line-through">
+                      {item.price.toLocaleString()}₫
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </SwiperSlide>
         ))}
 
-        {/* Custom navigation buttons */}
+        {/* Custom arrows */}
         <div
           ref={prevRef}
-          className="absolute top-1/2 left-2 transform -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 bg-blue-400 rounded-full flex items-center justify-center text-white cursor-pointer shadow-lg hover:bg-blue-500 transition z-10"
+          className="absolute z-10 flex items-center justify-center w-8 h-8 text-white transition transform -translate-y-1/2 bg-blue-400 rounded-full shadow-lg cursor-pointer top-1/2 left-2 md:w-10 md:h-10 hover:bg-blue-500"
         >
           &#10094;
         </div>
+
         <div
           ref={nextRef}
-          className="absolute top-1/2 right-2 transform -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 bg-blue-400 rounded-full flex items-center justify-center text-white cursor-pointer shadow-lg hover:bg-blue-500 transition z-10"
+          className="absolute z-10 flex items-center justify-center w-8 h-8 text-white transition transform -translate-y-1/2 bg-blue-400 rounded-full shadow-lg cursor-pointer top-1/2 right-2 md:w-10 md:h-10 hover:bg-blue-500"
         >
           &#10095;
         </div>

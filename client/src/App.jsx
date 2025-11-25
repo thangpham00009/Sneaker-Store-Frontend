@@ -5,6 +5,7 @@ import { checkAuthStatus } from "./redux/slices/authSlice"; // admin
 import { checkUserAuth  } from "./redux/slices/userAuthSlice"; // client
 import Loading from "./components/Loading";
 import { routes } from "./routers/router";
+import CartPopup from "./pages/client/components/CartPopup";
 
 function App() {
   const dispatch = useDispatch();
@@ -20,13 +21,16 @@ function App() {
     return <Loading />;
   }
 
-  return (
+ return (
+  <>
+    <CartPopup />
     <Routes>
       {routes.map((route, index) => (
         <Route key={index} path={route.path} element={route.element} />
       ))}
     </Routes>
-  );
+  </>
+);
 }
 
 export default App;

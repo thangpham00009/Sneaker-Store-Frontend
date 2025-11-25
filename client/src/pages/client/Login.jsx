@@ -18,7 +18,7 @@ export default function UserLogin() {
   );
 
   useEffect(() => {
-    if (isAuthenticated) navigate("/profile", { replace: true });
+    if (isAuthenticated) navigate("/", { replace: true });
   }, [isAuthenticated, navigate]);
 
   const handleSubmit = (e) => {
@@ -43,7 +43,7 @@ export default function UserLogin() {
 
         {/* Decorative Circles */}
         <div className="absolute w-40 h-40 bg-blue-300 rounded-full -top-16 -left-16 mix-blend-multiply blur-3xl animate-pulse"></div>
-        <div className="absolute w-72 h-72 bg-purple-200 rounded-full -bottom-20 -right-10 mix-blend-multiply blur-3xl animate-pulse"></div>
+        <div className="absolute bg-purple-200 rounded-full w-72 h-72 -bottom-20 -right-10 mix-blend-multiply blur-3xl animate-pulse"></div>
 
         {/* Header */}
         <div className="relative z-10 flex flex-col items-center mb-8">
@@ -74,7 +74,7 @@ export default function UserLogin() {
               disabled={loading}
               type="email"
               placeholder="example@gmail.com"
-              className="w-full px-5 py-3 border border-gray-300 rounded-xl transition focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 disabled:bg-gray-100"
+              className="w-full px-5 py-3 transition border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 disabled:bg-gray-100"
             />
           </div>
 
@@ -89,7 +89,7 @@ export default function UserLogin() {
               onChange={(e) => setPassword(e.target.value)}
               disabled={loading}
               placeholder="••••••••"
-              className="w-full px-5 py-3 border border-gray-300 rounded-xl transition focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 disabled:bg-gray-100"
+              className="w-full px-5 py-3 transition border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 disabled:bg-gray-100"
             />
 
             {/* Eye Icon */}
@@ -102,7 +102,7 @@ export default function UserLogin() {
           </div>
 
           {/* Forgot Password */}
-          <div className="text-right -mt-3">
+          <div className="-mt-3 text-right">
             <button
               type="button"
               onClick={() => navigate("/forgot-password")}
@@ -116,7 +116,7 @@ export default function UserLogin() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 mt-2 text-lg font-bold text-white bg-gradient-to-r from-blue-500 to-blue-700 rounded-xl shadow-lg transition hover:from-blue-600 hover:to-blue-800 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 mt-2 text-lg font-bold text-white transition shadow-lg bg-gradient-to-r from-blue-500 to-blue-700 rounded-xl hover:from-blue-600 hover:to-blue-800 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Đang đăng nhập..." : "Đăng nhập"}
           </button>
@@ -125,7 +125,7 @@ export default function UserLogin() {
           <button
             type="button"
             onClick={handleGoogleLogin}
-            className="flex items-center justify-center w-full py-3 mt-3 text-base font-medium bg-white border rounded-xl shadow-sm hover:bg-gray-100 active:scale-95"
+            className="flex items-center justify-center w-full py-3 mt-3 text-base font-medium bg-white border shadow-sm rounded-xl hover:bg-gray-100 active:scale-95"
           >
             <AiOutlineGoogle className="mr-2 text-xl text-red-500" />
             Đăng nhập với Google

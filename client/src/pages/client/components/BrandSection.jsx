@@ -1,14 +1,18 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useCart } from "../../../context/CartProvider";
+import defaultImage from "../../../assets/default.jpg";
+
 const BrandSection = ({ title, banner, products }) => {
+  const { addToCart } = useCart(); 
   return (  
-    <div className="w-full max-w-7xl mx-auto px-4 md:px-6 py-10">
+    <div className="w-full px-4 py-10 mx-auto max-w-7xl md:px-6">
 
       {/* Tiêu đề */}
-      <div className="text-center mb-10">
-        <h2 className="text-2xl md:text-3xl font-bold inline-block pb-4 relative">
+      <div className="mb-10 text-center">
+        <h2 className="relative inline-block pb-4 text-2xl font-bold md:text-3xl">
           {title}
-          <span className="absolute left-1/2 -translate-x-1/2 bottom-0 w-16 h-1 bg-blue-400 rounded"></span>
+          <span className="absolute bottom-0 w-16 h-1 -translate-x-1/2 bg-blue-400 rounded left-1/2"></span>
         </h2>
       </div>
 
@@ -22,7 +26,7 @@ const BrandSection = ({ title, banner, products }) => {
       </div>
 
       {/* Danh sách sản phẩm */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {products.map((item, i) => (
          
 <div key={i} className="text-center group">
@@ -31,50 +35,50 @@ const BrandSection = ({ title, banner, products }) => {
   <div className="relative mb-3 overflow-hidden rounded-md">
 
     {/* Badge giảm giá */}
-    {item.discount && (
-      <span className="absolute left-2 top-2 bg-red-600 text-white text-xs px-2 py-1 rounded-full z-20">
-        -{item.discount}%
+    {item.discount > 0 && (
+      <span className="absolute z-20 px-2 py-1 text-xs text-white bg-red-600 rounded-full right-2 top-2">
+        -{item.discount}% 
       </span>
     )}
 
+
     {/* Image */}
-    <img
-      src={item.image}
-      alt={item.name}
-      className="w-full h-auto object-cover transition duration-300 group-hover:brightness-75"
-    />
+   <img
+    src={item.images.length > 0 ? item.images.find(img => img.isDefault)?.url || item.images[0].url : defaultImage}
+    alt={item.name}
+    className="object-cover w-full h-auto transition duration-300 group-hover:brightness-75"
+  />
+
 
     {/* Hover buttons */}
     <div
-      className="
-        absolute inset-0 flex flex-col gap-2 items-center justify-center
-        opacity-0 group-hover:opacity-100
-        translate-y-4 group-hover:translate-y-0
-        transition-all duration-300 z-30
-      "
+      className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-2 transition-all duration-300 translate-y-4 opacity-0 group-hover:opacity-100 group-hover:translate-y-0"
     >
       <Link
         to={`/san-pham/${item.slug}`}
-        className="w-32 py-2 bg-white border rounded-md text-gray-800 font-semibold shadow hover:bg-gray-100 text-center"
+        className="w-32 py-2 font-semibold text-center text-gray-800 bg-white border rounded-md shadow hover:bg-gray-100"
       >
         Tùy chọn
       </Link>
 
-      <button className="w-32 py-2 bg-blue-500 text-white rounded-md font-semibold shadow hover:bg-blue-600">
+    <button
+      className="w-32 py-2 font-semibold text-white bg-blue-500 rounded-md shadow hover:bg-blue-600"
+      onClick={() => addToCart(item, 1)}
+    >
         Mua nhanh
       </button>
     </div>
   </div>
 
   {/* Product name */}
-  <p className="text-sm font-semibold h-12">{item.name}</p>
+  <p className="h-12 text-sm font-semibold">{item.name}</p>
 
   {/* Price */}
-  <div className="text-red-600 font-bold">{item.price.toLocaleString()}₫</div>
+  <div className="font-bold text-red-600">{item.discountPrice.toLocaleString()}₫</div>
 
-  {item.oldPrice && (
-    <div className="text-gray-500 line-through text-xs">
-      {item.oldPrice.toLocaleString()}₫
+  {item.price && (
+    <div className="text-xs text-gray-500 line-through">
+      {item.price.toLocaleString()}₫
     </div>
   )}
 </div>

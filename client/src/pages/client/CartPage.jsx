@@ -41,90 +41,87 @@ const CartPage = () => {
               </tr>
             </thead>
 
-            <tbody>
-              {cart.length === 0 ? (
-                <tr>
-                  <td colSpan="7" className="p-6 text-center text-gray-500">
-                    Giỏ hàng trống.
-                  </td>
-                </tr>
-              ) : (
-                cart.map((item) => {
-                  const product = item.product || {};
-                  const originalPrice = product.price ?? 0;
-                  const discountPrice = product.discountPrice ?? originalPrice;
-                  const savings = originalPrice - discountPrice;
+          <tbody>
+  {cart.length === 0 ? (
+    <tr>
+      <td colSpan="7" className="p-6 text-center text-gray-500">
+        Giỏ hàng trống.
+      </td>
+    </tr>
+  ) : (
+    cart.map((item) => {
+      // Nếu chưa login, item là chính product
+      const product = item.product || item;
+      const originalPrice = product.price ?? 0;
+      const discountPrice = product.discountPrice ?? originalPrice;
 
-                  return (
-                    <tr key={item.id} className="border-b">
-                      {/* IMAGE */}
-                      <td className="p-4 text-center">
-                        <img
-                          src={
-                            product.images?.find((i) => i.isDefault)?.url ||
-                            product.images?.[0]?.url ||
-                            defaultImage
-                          }
-                          alt={product.name}
-                          className="object-cover w-20 h-20 border rounded-md"
-                        />
-                      </td>
+      return (
+        <tr key={product.id} className="border-b">
+          {/* IMAGE */}
+          <td className="p-4 text-center">
+            <img
+              src={
+                product.images?.find((i) => i.isDefault)?.url ||
+                product.images?.[0]?.url ||
+                defaultImage
+              }
+              alt={product.name}
+              className="object-cover w-20 h-20 border rounded-md"
+            />
+          </td>
 
-                      {/* NAME */}
-                      <td className="p-4 font-semibold text-gray-700">{product.name}</td>
+          {/* NAME */}
+          <td className="p-4 font-semibold text-gray-700">{product.name}</td>
 
-                      {/* ORIGINAL PRICE */}
-                      <td className="p-4 font-semibold text-center text-gray-400 line-through">
-                        {originalPrice.toLocaleString()}đ
-                      </td>
+          {/* ORIGINAL PRICE */}
+          <td className="p-4 font-semibold text-center text-gray-400 line-through">
+            {originalPrice.toLocaleString()}đ
+          </td>
 
-                      {/* DISCOUNT PRICE */}
-                      <td className="p-4 font-semibold text-center text-red-500">
-                        {discountPrice.toLocaleString()}đ
-                      </td>
+          {/* DISCOUNT PRICE */}
+          <td className="p-4 font-semibold text-center text-red-500">
+            {discountPrice.toLocaleString()}đ
+          </td>
 
-                      {/* QUANTITY */}
-                      <td className="p-4 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            className="px-2 py-1 border"
-                            onClick={() =>
-                              updateQuantity(item.id, item.quantity - 1)
-                            }
-                          >
-                            -
-                          </button>
-                          <span>{item.quantity}</span>
-                          <button
-                            className="px-2 py-1 border"
-                            onClick={() =>
-                              updateQuantity(item.id, item.quantity + 1)
-                            }
-                          >
-                            +
-                          </button>
-                        </div>
-                      </td>
+          {/* QUANTITY */}
+          <td className="p-4 text-center">
+            <div className="flex items-center justify-center gap-2">
+              <button
+                className="px-2 py-1 border"
+                onClick={() => updateQuantity(product.id, item.quantity - 1)}
+              >
+                -
+              </button>
+              <span>{item.quantity}</span>
+              <button
+                className="px-2 py-1 border"
+                onClick={() => updateQuantity(product.id, item.quantity + 1)}
+              >
+                +
+              </button>
+            </div>
+          </td>
 
-                      {/* TOTAL PRICE */}
-                      <td className="p-4 font-semibold text-center text-red-500">
-                        {(discountPrice * item.quantity).toLocaleString()}đ
-                      </td>
+          {/* TOTAL PRICE */}
+          <td className="p-4 font-semibold text-center text-red-500">
+            {(discountPrice * item.quantity).toLocaleString()}đ
+          </td>
 
-                      {/* REMOVE */}
-                      <td className="p-4 text-center">
-                        <button
-                          className="text-gray-500 hover:text-red-500"
-                          onClick={() => removeFromCart(item.product.id)}
-                        >
-                          <FaTrashAlt />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
+          {/* REMOVE */}
+          <td className="p-4 text-center">
+            <button
+              className="text-gray-500 hover:text-red-500"
+              onClick={() => removeFromCart(product.id)}
+            >
+              <FaTrashAlt />
+            </button>
+          </td>
+        </tr>
+      );
+    })
+  )}
+          </tbody>
+
           </table>
         </div>
 

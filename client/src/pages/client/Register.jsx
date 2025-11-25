@@ -9,7 +9,7 @@ export default function Register() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const [name, setName] = useState("");
+  const [username, setUserName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -18,20 +18,26 @@ export default function Register() {
 
   const { loading, error } = useSelector((state) => state.userAuth);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    dispatch(clearUserError());
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  dispatch(clearUserError());
 
-    if (!name || !email || !password || !confirmPassword) {
-      return alert("Vui lòng nhập đầy đủ thông tin");
-    }
+  if (!username || !email || !password || !confirmPassword) {
+    return alert("Vui lòng nhập đầy đủ thông tin");
+  }
 
-    if (password !== confirmPassword) {
-      return alert("Mật khẩu nhập lại không khớp!");
-    }
+  if (password !== confirmPassword) {
+    return alert("Mật khẩu nhập lại không khớp!");
+  }
 
-    dispatch(registerUser({ name, email, password }));
-  };
+  try {
+    await dispatch(registerUser({ username, email, password })).unwrap();
+    navigate("/login");
+  } catch (err) {
+    console.error("Đăng ký thất bại:", err);
+  }
+};
+
 
   const handleGoogleRegister = () => {
     window.location.href = "http://localhost:8080/api/v1/user/auth/google";
@@ -39,15 +45,15 @@ export default function Register() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-200 via-white to-blue-100">
-      <div className="relative w-full max-w-xl md:max-w-xl p-12 bg-white shadow-2xl rounded-3xl overflow-hidden">
+      <div className="relative w-full max-w-xl p-12 overflow-hidden bg-white shadow-2xl md:max-w-xl rounded-3xl">
         
         {/* Vòng trang trí */}
         <div className="absolute w-40 h-40 bg-blue-300 rounded-full -top-12 -left-12 mix-blend-multiply blur-3xl animate-pulse"></div>
         <div className="absolute w-64 h-64 bg-purple-200 rounded-full -bottom-16 -right-10 mix-blend-multiply blur-3xl animate-pulse"></div>
 
         {/* Logo + Title */}
-        <div className="relative z-10 text-center mb-8">
-          <img src={logo} alt="logo" className="w-16 h-16 mx-auto rounded-full shadow-md mb-3" />
+        <div className="relative z-10 mb-8 text-center">
+          <img src={logo} alt="logo" className="w-16 h-16 mx-auto mb-3 rounded-full shadow-md" />
           <h1 className="text-3xl font-extrabold text-gray-900">
             Tạo tài khoản <span className="text-blue-600">SneakerStore</span>
           </h1>
@@ -71,8 +77,8 @@ export default function Register() {
             </label>
             <input
               type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={username}
+              onChange={(e) => setUserName(e.target.value)}
               disabled={loading}
               placeholder="Nguyễn Văn A"
               className="w-full px-5 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
@@ -142,7 +148,7 @@ export default function Register() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 mt-2 text-lg font-bold text-white bg-gradient-to-r from-blue-500 to-blue-700 rounded-xl shadow-lg hover:from-blue-600 hover:to-blue-800 active:scale-95"
+            className="w-full py-3 mt-2 text-lg font-bold text-white shadow-lg bg-gradient-to-r from-blue-500 to-blue-700 rounded-xl hover:from-blue-600 hover:to-blue-800 active:scale-95"
           >
             {loading ? "Đang tạo..." : "Đăng ký"}
           </button>
@@ -151,7 +157,7 @@ export default function Register() {
           <button
             type="button"
             onClick={handleGoogleRegister}
-            className="flex items-center justify-center w-full py-3 mt-3 text-base font-medium bg-white border rounded-xl shadow-sm hover:bg-gray-100 active:scale-95"
+            className="flex items-center justify-center w-full py-3 mt-3 text-base font-medium bg-white border shadow-sm rounded-xl hover:bg-gray-100 active:scale-95"
           >
             <AiOutlineGoogle className="mr-2 text-xl text-red-500" />
             Đăng nhập với Google

@@ -81,38 +81,57 @@ const addToCart = async (product, quantity = 1) => {
   setShowCartPopup(true);
 };
 
-  // Xóa sản phẩm
-  const removeFromCart = async (id) => {
-    if (!isAuthenticated) {
-      setCart(cart.filter((item) => item.id !== id));
-    } else {
-     
-      await cartAPI.removeCartItem(id);
-      const res = await cartAPI.getCart();
-      setCart(res.data?.items || []); 
-    }
-  };
+const removeFromCart = async (id) => {
+  if (!isAuthenticated) {
+    const newCart = cart.filter((item) => item.id !== id);
+    setCart(newCart);
 
-  // Cập nhật số lượng
-  const updateQuantity = async (id, quantity) => {
-    const qty = parseInt(quantity);
-    if (qty < 1) return;
-
-    if (!isAuthenticated) {
-      setCart(
-        cart.map((item) =>
-          item.id === id ? { ...item, quantity: qty } : item
-        )
-      );
-    } else {
-      await cartAPI.updateCartItem({
-        productId: id,
-        quantity: qty,
-      });
-      const res = await cartAPI.getCart();
-      setCart(res.data?.items || []); 
+    // Nếu đang hiển thị sản phẩm bị xóa, cập nhật lastAdded
+    if (lastAdded?.id === id) {
+      setLastAdded(newCart[0] || null);
     }
-  };
+  } else {
+    await cartAPI.removeCartItem(id);
+    const res = await cartAPI.getCart();
+    const newCart = res.data?.items || [];
+    setCart(newCart);
+
+    if (lastAdded?.id === id) {
+      setLastAdded(newCart[0] || null);
+    }
+  }
+};
+
+const updateQuantity = async (id, quantity) => {
+  const qty = parseInt(quantity);
+  if (qty < 1) return;
+
+  if (!isAuthenticated) {
+    const newCart = cart.map((item) =>
+      item.id === id ? { ...item, quantity: qty } : item
+    );
+    setCart(newCart);
+
+    // Nếu update sản phẩm đang hiển thị popup
+    if (lastAdded?.id === id) {
+      const updatedItem = newCart.find((item) => item.id === id);
+      setLastAdded(updatedItem);
+    }
+  } else {
+    await cartAPI.updateCartItem({
+      productId: id,
+      quantity: qty,
+    });
+    const res = await cartAPI.getCart();
+    const newCart = res.data?.items || [];
+    setCart(newCart);
+
+    if (lastAdded?.id === id) {
+      const updatedItem = newCart.find((item) => item.id === id);
+      setLastAdded(updatedItem);
+    }
+  }
+};
 
   const value = {
     cart,

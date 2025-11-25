@@ -86,7 +86,6 @@ const removeFromCart = async (id) => {
     const newCart = cart.filter((item) => item.id !== id);
     setCart(newCart);
 
-    // Nếu đang hiển thị sản phẩm bị xóa, cập nhật lastAdded
     if (lastAdded?.id === id) {
       setLastAdded(newCart[0] || null);
     }
@@ -96,8 +95,14 @@ const removeFromCart = async (id) => {
     const newCart = res.data?.items || [];
     setCart(newCart);
 
+    // ⭐ FIX: tìm theo product.id
     if (lastAdded?.id === id) {
-      setLastAdded(newCart[0] || null);
+      const firstItem = newCart[0];
+      setLastAdded(
+        firstItem
+          ? { ...firstItem.product, quantity: firstItem.quantity }
+          : null
+      );
     }
   }
 };
@@ -112,23 +117,25 @@ const updateQuantity = async (id, quantity) => {
     );
     setCart(newCart);
 
-    // Nếu update sản phẩm đang hiển thị popup
     if (lastAdded?.id === id) {
       const updatedItem = newCart.find((item) => item.id === id);
       setLastAdded(updatedItem);
     }
   } else {
-    await cartAPI.updateCartItem({
-      productId: id,
-      quantity: qty,
-    });
+    await cartAPI.updateCartItem({ productId: id, quantity: qty });
+
     const res = await cartAPI.getCart();
     const newCart = res.data?.items || [];
     setCart(newCart);
 
-    if (lastAdded?.id === id) {
-      const updatedItem = newCart.find((item) => item.id === id);
-      setLastAdded(updatedItem);
+    // ⭐ FIX CHÍNH
+    const updatedItem = newCart.find((item) => item.product?.id === id);
+
+    if (updatedItem) {
+      setLastAdded({
+        ...updatedItem.product,
+        quantity: updatedItem.quantity,
+      });
     }
   }
 };

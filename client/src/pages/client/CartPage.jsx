@@ -8,16 +8,20 @@ const CartPage = () => {
   const { cart, removeFromCart, updateQuantity } = useCart();
 
   const subtotal = cart.reduce((sum, item) => {
-    const product = item.product || {};
-    const unitPrice = product.discountPrice ?? product.price ?? 0;
-    return sum + unitPrice * item.quantity;
+    const p = item.product ?? item;
+    const quantity = item.quantity ?? 1;
+    const price = p.discountPrice ?? p.price ?? 0;
+    return sum + price * quantity;
   }, 0);
 
-  const totalSavings = cart.reduce((sum, item) => {
-    const product = item.product || {};
-    const discount = (product.price ?? 0) - (product.discountPrice ?? product.price ?? 0);
-    return sum + discount * item.quantity;
-  }, 0);
+
+const totalSavings = cart.reduce((sum, item) => {
+  const p = item.product ?? item;
+  const quantity = item.quantity ?? 1;
+  const discount = (p.price ?? 0) - (p.discountPrice ?? p.price ?? 0);
+  return sum + discount * quantity;
+}, 0);
+
 
   return (
     <>

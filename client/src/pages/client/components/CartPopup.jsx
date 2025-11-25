@@ -19,7 +19,11 @@ const CartPopup = () => {
   return (
     <div
       className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm"
-      onClick={() => setShowCartPopup(false)}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          setShowCartPopup(false);
+        }
+      }}
     >
       <div
         className="w-full max-w-2xl bg-white rounded-xl shadow-2xl p-6 animate-[fadeIn_0.25s_ease]"

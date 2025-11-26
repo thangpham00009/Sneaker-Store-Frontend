@@ -9,11 +9,11 @@ export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
   const [initialized, setInitialized] = useState(false);
   const [showCartPopup, setShowCartPopup] = useState(false);
-  const [lastAdded, setLastAdded] = useState(null);
 
   const user = useSelector((state) => state.userAuth.user);
   const isAuthenticated = useSelector((state) => state.userAuth.isAuthenticated);
 
+  // load local cart
   useEffect(() => {
     if (!isAuthenticated) {
       const stored = localStorage.getItem("cart");
@@ -22,30 +22,27 @@ export const CartProvider = ({ children }) => {
     }
   }, [isAuthenticated]);
 
+  // sync cart khi login
+  useEffect(() => {
+    const syncCartWhenLogin = async () => {
+      if (!isAuthenticated) return;
 
-useEffect(() => {
-  const syncCartWhenLogin = async () => {
-  if (!isAuthenticated) return;
+      let localCart = JSON.parse(localStorage.getItem("cart") || "[]");
+      const res = await cartAPI.getCart();
+      let serverCart = res.data?.items || [];
 
-  let localCart = JSON.parse(localStorage.getItem("cart") || "[]");
-  const res = await cartAPI.getCart();
-  let serverCart = res.data?.items || [];
-  if (localCart.length > 0) {
-    for (let item of localCart) {
-      await cartAPI.addToCart({
-        productId: item.id,
-        quantity: item.quantity,
-      });
-    }
-    localStorage.removeItem("cart");
-  }
+      if (localCart.length > 0) {
+        for (let item of localCart) {
+          await cartAPI.addToCart({ productId: item.id, quantity: item.quantity });
+        }
+        localStorage.removeItem("cart");
+      }
 
-  const finalCartRes = await cartAPI.getCart();
-  const finalCartItems = finalCartRes.data?.items || [];
-  setCart(finalCartItems);
-};
-  syncCartWhenLogin();
-}, [isAuthenticated]);
+      const finalCartRes = await cartAPI.getCart();
+      setCart(finalCartRes.data?.items || []);
+    };
+    syncCartWhenLogin();
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (!isAuthenticated && initialized) {
@@ -53,103 +50,55 @@ useEffect(() => {
     }
   }, [cart, isAuthenticated, initialized]);
 
-const addToCart = async (product, quantity = 1) => {
-  if (!isAuthenticated) {
-    const exist = cart.find((item) => item.id === product.id);
-    if (exist) {
-      setCart(
-        cart.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        )
-      );
+  const addToCart = async (product, quantity = 1, size) => {
+    if (!size) return alert("Vui lòng chọn size");
+
+    if (!isAuthenticated) {
+      const exist = cart.find((item) => item.id === product.id && item.size === size);
+      if (exist) {
+        setCart(cart.map((item) => 
+          item.id === product.id && item.size === size ? {...item, quantity: item.quantity + quantity} : item
+        ));
+      } else {
+        setCart([...cart, { ...product, quantity, size }]);
+      }
     } else {
-      setCart([...cart, { ...product, quantity }]);
+      await cartAPI.addToCart({ productId: product.id, quantity, size });
+      const res = await cartAPI.getCart();
+      setCart(res.data?.items || []);
     }
-    setLastAdded({ ...product, quantity });
-  } else {
-    await cartAPI.addToCart({
-      productId: product.id,
-      quantity,
-    });
-    const res = await cartAPI.getCart();
-    setCart(res.data?.items || []);
-    setLastAdded({ ...product, quantity }); 
-  }
 
-  setShowCartPopup(true);
-};
-
-const removeFromCart = async (id) => {
-  if (!isAuthenticated) {
-    const newCart = cart.filter((item) => item.id !== id);
-    setCart(newCart);
-
-    if (lastAdded?.id === id) {
-      setLastAdded(newCart[0] || null);
-    }
-  } else {
-    await cartAPI.removeCartItem(id);
-    const res = await cartAPI.getCart();
-    const newCart = res.data?.items || [];
-    setCart(newCart);
-
-    // ⭐ FIX: tìm theo product.id
-    if (lastAdded?.id === id) {
-      const firstItem = newCart[0];
-      setLastAdded(
-        firstItem
-          ? { ...firstItem.product, quantity: firstItem.quantity }
-          : null
-      );
-    }
-  }
-};
-
-const updateQuantity = async (id, quantity) => {
-  const qty = parseInt(quantity);
-  if (qty < 1) return;
-
-  if (!isAuthenticated) {
-    const newCart = cart.map((item) =>
-      item.id === id ? { ...item, quantity: qty } : item
-    );
-    setCart(newCart);
-
-    if (lastAdded?.id === id) {
-      const updatedItem = newCart.find((item) => item.id === id);
-      setLastAdded(updatedItem);
-    }
-  } else {
-    await cartAPI.updateCartItem({ productId: id, quantity: qty });
-
-    const res = await cartAPI.getCart();
-    const newCart = res.data?.items || [];
-    setCart(newCart);
-
-    // ⭐ FIX CHÍNH
-    const updatedItem = newCart.find((item) => item.product?.id === id);
-
-    if (updatedItem) {
-      setLastAdded({
-        ...updatedItem.product,
-        quantity: updatedItem.quantity,
-      });
-    }
-  }
-};
-
-  const value = {
-    cart,
-    setCart,
-    addToCart,
-    removeFromCart,
-    updateQuantity,
-    showCartPopup,
-    setShowCartPopup,
-    lastAdded,
+    setShowCartPopup(true);
   };
 
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+  const removeFromCart = async (id, size) => {
+    if (!isAuthenticated) {
+      setCart(cart.filter((item) => !(item.id === id && item.size === size)));
+    } else {
+      await cartAPI.removeCartItem(id, size);
+      const res = await cartAPI.getCart();
+      setCart(res.data?.items || []);
+    }
+  };
+
+  const updateQuantity = async (id, quantity, size) => {
+    const qty = parseInt(quantity);
+    if (qty < 1) return;
+
+    if (!isAuthenticated) {
+      setCart(cart.map((item) => 
+        item.id === id && item.size === size ? { ...item, quantity: qty } : item
+      ));
+    } else {
+      await cartAPI.updateCartItem({ productId: id, quantity: qty, size });
+      const res = await cartAPI.getCart();
+      setCart(res.data?.items || []);
+    }
+  };
+
+  return (
+    <CartContext.Provider value={{ cart, setCart, addToCart, removeFromCart, updateQuantity, showCartPopup, setShowCartPopup }}>
+      {children}
+    </CartContext.Provider>
+  );
 };

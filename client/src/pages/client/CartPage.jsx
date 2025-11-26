@@ -4,6 +4,7 @@ import Navbar from "./components/Navbar";
 import { FaTrashAlt } from "react-icons/fa";
 import { useCart } from "@/context/CartProvider";
 import defaultImage from "../../assets/default.jpg";
+
 const CartPage = () => {
   const { cart, removeFromCart, updateQuantity } = useCart();
 
@@ -14,14 +15,12 @@ const CartPage = () => {
     return sum + price * quantity;
   }, 0);
 
-
-const totalSavings = cart.reduce((sum, item) => {
-  const p = item.product ?? item;
-  const quantity = item.quantity ?? 1;
-  const discount = (p.price ?? 0) - (p.discountPrice ?? p.price ?? 0);
-  return sum + discount * quantity;
-}, 0);
-
+  const totalSavings = cart.reduce((sum, item) => {
+    const p = item.product ?? item;
+    const quantity = item.quantity ?? 1;
+    const discount = (p.price ?? 0) - (p.discountPrice ?? p.price ?? 0);
+    return sum + discount * quantity;
+  }, 0);
 
   return (
     <>
@@ -37,6 +36,7 @@ const totalSavings = cart.reduce((sum, item) => {
               <tr className="border-b bg-gray-50">
                 <th className="w-40 p-4 text-center">Ảnh sản phẩm</th>
                 <th className="p-4">Tên sản phẩm</th>
+                <th className="w-32 p-4 text-center">Size</th> {/* Cột size */}
                 <th className="w-40 p-4 text-center">Giá gốc</th>
                 <th className="w-40 p-4 text-center">Giá giảm</th>
                 <th className="w-32 p-4 text-center">Số lượng</th>
@@ -45,87 +45,102 @@ const totalSavings = cart.reduce((sum, item) => {
               </tr>
             </thead>
 
-          <tbody>
-  {cart.length === 0 ? (
-    <tr>
-      <td colSpan="7" className="p-6 text-center text-gray-500">
-        Giỏ hàng trống.
-      </td>
-    </tr>
-  ) : (
-    cart.map((item) => {
-      // Nếu chưa login, item là chính product
-      const product = item.product || item;
-      const originalPrice = product.price ?? 0;
-      const discountPrice = product.discountPrice ?? originalPrice;
+            <tbody>
+              {cart.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="p-6 text-center text-gray-500">
+                    Giỏ hàng trống.
+                  </td>
+                </tr>
+              ) : (
+                cart.map((item) => {
+                  const product = item.product || item;
+                  const originalPrice = product.price ?? 0;
+                  const discountPrice = product.discountPrice ?? originalPrice;
 
-      return (
-        <tr key={product.id} className="border-b">
-          {/* IMAGE */}
-          <td className="p-4 text-center">
-            <img
-              src={
-                product.images?.find((i) => i.isDefault)?.url ||
-                product.images?.[0]?.url ||
-                defaultImage
-              }
-              alt={product.name}
-              className="object-cover w-20 h-20 border rounded-md"
-            />
-          </td>
+                  return (
+                    <tr key={`${product.id}-${item.size || ""}`} className="border-b">
+                      {/* IMAGE */}
+                      <td className="p-4 text-center">
+                        <img
+                          src={
+                            product.images?.find((i) => i.isDefault)?.url ||
+                            product.images?.[0]?.url ||
+                            defaultImage
+                          }
+                          alt={product.name}
+                          className="object-cover w-20 h-20 border rounded-md"
+                        />
+                      </td>
 
-          {/* NAME */}
-          <td className="p-4 font-semibold text-gray-700">{product.name}</td>
+                      {/* NAME */}
+                      <td className="p-4 font-semibold text-gray-700">{product.name}</td>
 
-          {/* ORIGINAL PRICE */}
-          <td className="p-4 font-semibold text-center text-gray-400 line-through">
-            {originalPrice.toLocaleString()}đ
-          </td>
+                      {/* SIZE */}
+                      <td className="p-4 font-semibold text-center text-gray-700">
+                        {item.size || "-"}
+                      </td>
 
-          {/* DISCOUNT PRICE */}
-          <td className="p-4 font-semibold text-center text-red-500">
-            {discountPrice.toLocaleString()}đ
-          </td>
+                      {/* ORIGINAL PRICE */}
+                      <td className="p-4 font-semibold text-center text-gray-400 line-through">
+                        {originalPrice.toLocaleString()}đ
+                      </td>
 
-          {/* QUANTITY */}
-          <td className="p-4 text-center">
-            <div className="flex items-center justify-center gap-2">
-              <button
-                className="px-2 py-1 border"
-                onClick={() => updateQuantity(product.id, item.quantity - 1)}
-              >
-                -
-              </button>
-              <span>{item.quantity}</span>
-              <button
-                className="px-2 py-1 border"
-                onClick={() => updateQuantity(product.id, item.quantity + 1)}
-              >
-                +
-              </button>
-            </div>
-          </td>
+                      {/* DISCOUNT PRICE */}
+                      <td className="p-4 font-semibold text-center text-red-500">
+                        {discountPrice.toLocaleString()}đ
+                      </td>
 
-          {/* TOTAL PRICE */}
-          <td className="p-4 font-semibold text-center text-red-500">
-            {(discountPrice * item.quantity).toLocaleString()}đ
-          </td>
+                      {/* QUANTITY */}
+                      <td className="p-4 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            className="px-2 py-1 border"
+                            onClick={() =>
+                              updateQuantity(
+                                product.id,
+                                item.quantity - 1,
+                                item.size
+                              )
+                            }
+                          >
+                            -
+                          </button>
+                          <span>{item.quantity}</span>
+                          <button
+                            className="px-2 py-1 border"
+                            onClick={() =>
+                              updateQuantity(
+                                product.id,
+                                item.quantity + 1,
+                                item.size
+                              )
+                            }
+                          >
+                            +
+                          </button>
+                        </div>
+                      </td>
 
-          {/* REMOVE */}
-          <td className="p-4 text-center">
-            <button
-              className="text-gray-500 hover:text-red-500"
-              onClick={() => removeFromCart(product.id)}
-            >
-              <FaTrashAlt />
-            </button>
-          </td>
-        </tr>
-      );
-    })
-  )}
-          </tbody>
+                      {/* TOTAL PRICE */}
+                      <td className="p-4 font-semibold text-center text-red-500">
+                        {(discountPrice * item.quantity).toLocaleString()}đ
+                      </td>
 
+                      {/* REMOVE */}
+                      <td className="p-4 text-center">
+                        <button
+                          className="text-gray-500 hover:text-red-500"
+                          onClick={() => removeFromCart(product.id, item.size)}
+                        >
+                          <FaTrashAlt />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
           </table>
         </div>
 

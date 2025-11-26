@@ -10,20 +10,16 @@ const formatCurrency = (amount) =>
   }).format(amount);
 
 const CartPopup = () => {
-  const { lastAdded, showCartPopup, setShowCartPopup, updateQuantity, removeFromCart } = useCart();
+  const { cart, showCartPopup, setShowCartPopup, updateQuantity, removeFromCart } = useCart();
 
-  if (!showCartPopup || !lastAdded) return null;
+  if (!showCartPopup || !cart || cart.length === 0) return null;
 
-  const totalAmount = lastAdded.price * lastAdded.quantity;
+  const totalAmount = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
     <div
       className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          setShowCartPopup(false);
-        }
-      }}
+      onClick={(e) => e.target === e.currentTarget && setShowCartPopup(false)}
     >
       <div
         className="w-full max-w-2xl bg-white rounded-xl shadow-2xl p-6 animate-[fadeIn_0.25s_ease]"
@@ -31,9 +27,7 @@ const CartPopup = () => {
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <p className="text-lg font-semibold text-gray-800">
-            Đã thêm "{lastAdded.name}" vào giỏ hàng!
-          </p>
+          <p className="text-lg font-semibold text-gray-800">Giỏ hàng của bạn</p>
           <button
             onClick={() => setShowCartPopup(false)}
             className="text-2xl text-gray-600 hover:text-black"
@@ -42,71 +36,68 @@ const CartPopup = () => {
           </button>
         </div>
 
-        {/* Product just added */}
+        {/* Product list */}
         <div className="pr-2 overflow-y-auto max-h-80">
-          <div className="flex items-center gap-4 py-3 border-b">
-            <img
-              src={lastAdded.images?.[0]?.url || lastAdded.image || "/placeholder.png"}
-              alt={lastAdded.name}
-              className="object-cover w-20 h-20 border rounded-md"
-            />
+          {cart.map((item, index) => (
+            <div key={index} className="flex items-center gap-4 py-3 border-b">
+              <img
+                src={item.images?.[0]?.url || item.image || "/placeholder.png"}
+                alt={item.name}
+                className="object-cover w-20 h-20 border rounded-md"
+              />
+              <div className="flex-1">
+                <p className="font-semibold text-gray-800">{item.name}</p>
+                {item.size && <p className="text-sm text-gray-600">Size: {item.size}</p>}
 
-            <div className="flex-1">
-              <p className="font-semibold text-gray-800">{lastAdded.name}</p>
+                {/* Quantity */}
+                <div className="flex items-center mt-2">
+                  <button
+                    className="border w-7 h-7 rounded-l-md hover:bg-gray-100"
+                    onClick={() =>
+                      updateQuantity(item.id, item.quantity > 1 ? item.quantity - 1 : 1, item.size)
+                    }
+                  >
+                    -
+                  </button>
 
-              {/* Quantity */}
-              <div className="flex items-center mt-2">
+                  <input
+                    type="number"
+                    value={item.quantity}
+                    min="1"
+                    onChange={(e) =>
+                      updateQuantity(item.id, parseInt(e.target.value) || 1, item.size)
+                    }
+                    className="w-10 text-center border-t border-b"
+                  />
+
+                  <button
+                    className="border w-7 h-7 rounded-r-md hover:bg-gray-100"
+                    onClick={() => updateQuantity(item.id, item.quantity + 1, item.size)}
+                  >
+                    +
+                  </button>
+                </div>
+
                 <button
-                  className="border w-7 h-7 rounded-l-md hover:bg-gray-100"
-                  onClick={() =>
-                    updateQuantity(
-                      lastAdded.id,
-                      lastAdded.quantity > 1 ? lastAdded.quantity - 1 : 1
-                    )
-                  }
+                  onClick={() => removeFromCart(item.id, item.size)}
+                  className="mt-1 text-xs text-red-500 hover:underline"
                 >
-                  -
-                </button>
-
-                <input
-                  type="number"
-                  value={lastAdded.quantity}
-                  min="1"
-                  onChange={(e) => updateQuantity(lastAdded.id, e.target.value)}
-                  className="w-10 text-center border-t border-b"
-                />
-
-                <button
-                  className="border w-7 h-7 rounded-r-md hover:bg-gray-100"
-                  onClick={() =>
-                    updateQuantity(lastAdded.id, lastAdded.quantity + 1)
-                  }
-                >
-                  +
+                  × Xóa sản phẩm
                 </button>
               </div>
 
-              <button
-                onClick={() => removeFromCart(lastAdded.id)}
-                className="mt-1 text-xs text-red-500 hover:underline"
-              >
-                × Xóa sản phẩm
-              </button>
+              <p className="font-bold text-red-500">
+                {formatCurrency(item.price * item.quantity)}
+              </p>
             </div>
-
-            <p className="font-bold text-red-500">
-              {formatCurrency(totalAmount)}
-            </p>
-          </div>
+          ))}
         </div>
 
         {/* Footer */}
         <div className="pt-4 mt-5 border-t">
           <div className="flex justify-between mb-4">
             <span className="text-lg font-bold">Tổng tiền:</span>
-            <span className="text-xl font-bold text-red-600">
-              {formatCurrency(totalAmount)}
-            </span>
+            <span className="text-xl font-bold text-red-600">{formatCurrency(totalAmount)}</span>
           </div>
 
           <div className="flex justify-end gap-3">

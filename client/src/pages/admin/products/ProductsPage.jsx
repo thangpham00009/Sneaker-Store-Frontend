@@ -303,7 +303,8 @@ const fetchProducts = async () => {
                 <th className="px-4 py-3">Sản phẩm</th>
                 <th className="px-4 py-3">Danh mục</th>
                 <th className="px-4 py-3">Thương hiệu</th>
-                <th className="px-4 py-3">Giá</th>
+                <th className="px-4 py-3">Giá gốc</th>
+                <th className="px-4 py-3">Giá giảm</th> 
                 <th className="px-4 py-3 text-center">Trạng thái</th>
                 <th className="px-4 py-3 text-center">Hành động</th>
               </tr>
@@ -346,7 +347,9 @@ const fetchProducts = async () => {
                     <td className="px-4 py-3 font-semibold text-red-600">
                       {formatPrice(p.price)}
                     </td>
-
+                    <td className="px-4 py-3 font-semibold text-green-600">
+                      {p.discountPrice && p.discountPrice > 0 ? formatPrice(p.discountPrice) : "—"}
+                    </td>
                     <td className="px-4 py-3 text-center">
                       <span
                         className={`px-2 py-1 text-xs rounded-full ${

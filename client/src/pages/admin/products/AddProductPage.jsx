@@ -49,6 +49,13 @@ export default function AddProductPage() {
   const brandRef = useRef(null);
   const categoryRef = useRef(null);
 
+  //sizes & giá giảm
+  const [discountPrice, setDiscountPrice] = useState("");
+  const [sizes, setSizes] = useState([
+  36.5, 37, 37.5, 38, 38.5, 39, 40, 40.5, 41, 41.5, 42, 42.5, 43, 43.5, 44, 44.5, 45, 45.5, 46, 46.5
+].map(size => ({ size, selected: false, stock: 0 })));
+
+
   useEffect(() => setSlug(generateSlug(name)), [name]);
 
   // Load brands & categories
@@ -110,6 +117,7 @@ export default function AddProductPage() {
 
 const handleSubmit = async (e) => {
   e.preventDefault();
+
   if (!name || !slug || !selectedBrand) {
     setErrors({ form: "Vui lòng nhập đầy đủ thông tin!" });
     return;
@@ -120,25 +128,28 @@ const handleSubmit = async (e) => {
   formData.append("slug", slug);
   formData.append("status", status);
   formData.append("description", editorData);
-  formData.append("brand_id", Number(selectedBrand.id));
-  formData.append("price", Number(price)); // <-- thêm
-  selectedCategories.forEach((c) => formData.append("categoryIds", Number(c.id)));
-  imageFiles.forEach((f) => formData.append("images", f));
-  formData.append("mainImageIndex", Number(mainImageIndex));
+  formData.append("brand_id", selectedBrand.id);
+  formData.append("price", price);
+  formData.append("discountPrice", discountPrice || 0);
+  formData.append("mainImageIndex", mainImageIndex);
+  selectedCategories.forEach(c => formData.append("categoryIds", c.id));
+  imageFiles.forEach(f => formData.append("images", f));
+  sizes
+    .filter(s => s.selected)
+    .forEach(s => formData.append("sizes[]", s.size)); 
 
   try {
     setLoading(true);
-    await productAPI.create(formData);
+    await productAPI.create(formData); 
     setSuccessMessage("Thêm sản phẩm thành công!");
     setTimeout(() => navigate("/admin/products"), 1200);
   } catch (err) {
     console.error("Axios error:", err.response || err);
-    setErrors({ form: "Có lỗi xảy ra khi thêm sản phẩm!" });
+    setErrors({ form: err.response?.data?.message || "Có lỗi xảy ra khi thêm sản phẩm!" });
   } finally {
     setLoading(false);
   }
 };
-
 
   return (
     <div className="relative w-full min-h-screen p-6 bg-gray-50">
@@ -190,6 +201,17 @@ const handleSubmit = async (e) => {
     onChange={(e) => setPrice(e.target.value)}
   />
 </div>
+
+<div>
+  <label className="block mb-1 text-sm font-medium text-gray-700">Giá giảm</label>
+  <Input
+    placeholder="Nhập giá giảm"
+    type="number"
+    value={discountPrice}
+    onChange={(e) => setDiscountPrice(e.target.value)}
+  />
+</div>
+
 
 
   {/* Brand */}
@@ -296,6 +318,28 @@ const handleSubmit = async (e) => {
       </div>
     </div>
   </div>
+  <div className="mt-4">
+  <label className="block mb-2 text-sm font-medium text-gray-700">Chọn size</label>
+  <div className="grid grid-cols-3 gap-2 md:grid-cols-6">
+    {sizes.map((s, idx) => (
+      <div key={s.size} className="flex flex-col items-start">
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={s.selected}
+            onChange={(e) => {
+              const newSizes = [...sizes];
+              newSizes[idx].selected = e.target.checked;
+              setSizes(newSizes);
+            }}
+          />
+          <span>{s.size}</span>
+        </label>
+      </div>
+    ))}
+  </div>
+</div>
+
 
   {/* Status */}
   <div className="grid grid-cols-1 gap-2 md:grid-cols-3">

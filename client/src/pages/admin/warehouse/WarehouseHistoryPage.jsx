@@ -11,7 +11,8 @@ export default function WarehouseHistoryPage() {
     const fetchHistory = async () => {
       try {
         const res = await warehouseHistoryAPI.getAll();
-        setHistory(res.data.data); // dùng luôn data trả về
+        setHistory(res.data.data);
+        console.log(history)
       } catch (error) {
         console.error(error);
       } finally {
@@ -61,6 +62,9 @@ export default function WarehouseHistoryPage() {
               <th className="p-3 text-center w-[120px]">
                 <CustomTooltip text="ID sản phẩm">Sản phẩm (ID)</CustomTooltip>
               </th>
+              <th className="p-3 text-center w-[120px]">
+                <CustomTooltip text="ID sản phẩm">Size</CustomTooltip>
+              </th>
               <th className="p-3 text-center w-[140px]">
                 <CustomTooltip text="Người thực hiện điều chỉnh">Người điều chỉnh</CustomTooltip>
               </th>
@@ -88,7 +92,13 @@ export default function WarehouseHistoryPage() {
                 className="transition border-t hover:bg-gray-50 text-sm text-gray-700"
               >
                 <td className="p-2 text-center">{h.id}</td>
-                <td className="p-2 text-center">{h.product?.name} ({h.product_id})</td>
+                <td className="p-2 text-center">
+                  {h.size?.product?.name || "Unknown"} ({h.size?.product?.id || "-"})
+                </td>
+                <td className="p-2 text-center">
+                  Size {h.size?.size}
+                </td>
+
                 <td className="p-2 text-center">{h.admin?.username || "Unknown"}</td>
                 <td className="p-2 text-center">{h.old_quantity}</td>
                 <td className="p-2 text-center">{h.new_quantity}</td>

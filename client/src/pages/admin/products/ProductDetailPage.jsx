@@ -31,6 +31,7 @@ export default function ProductDetailPage() {
       }
     };
     fetchProduct();
+
   }, [productId]);
 
   if (loading) return <div className="flex items-center justify-center min-h-screen text-gray-500">Đang tải dữ liệu...</div>;
@@ -82,7 +83,29 @@ export default function ProductDetailPage() {
           {/* Basic Info */}
           <div className="p-4 space-y-2 bg-white rounded-lg shadow-md">
             <h2 className="text-3xl font-bold text-gray-800">{product.name}</h2>
-            <span className="text-2xl font-semibold text-purple-600">{product.price?.toLocaleString()}₫</span>
+            {/* Price */}
+                <div className="flex items-center gap-3 mt-2">
+                  <span className="text-2xl font-semibold text-blue-600">{product.discountPrice?.toLocaleString()}₫</span>
+                  {product.discountPrice > 0 && (
+                    <span className="text-xl font-semibold text-red-500 line-through">{product.price?.toLocaleString()}₫</span>
+                  )}
+                </div>
+
+                {/* Sizes */}
+                {product.sizes?.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    <span className="text-sm font-medium text-gray-700">Size có sẵn:</span>
+                    {product.sizes
+                      .filter(s => s.size) // chỉ lấy size đã chọn
+                      .map(s => (
+                        <span key={s.size} className="px-2 py-1 text-sm text-white bg-blue-600 rounded-full">
+                          {s.size}
+                        </span>
+                      ))
+                    }
+                  </div>
+                )}
+
             <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
               product.status === "Active" ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"
             }`}>{product.status === "Active" ? "Hoạt động" : "Ẩn"}</span>

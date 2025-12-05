@@ -6,5 +6,12 @@ export const userAPI = {
   logout: () => apiClient.post("/user/logout"),
   getProfile: () => apiClient.get("/user/profile"),
   refreshToken: () => apiClient.post("/user/refresh-token"),
+
+  getAllUsers: () => apiClient.get("/admin/users"),
+  getUserById: (id) => apiClient.get(`/admin/users/${id}`),
+  updateUser: (id, data) =>
+    apiClient.put(`/api/v1/admin/users/${id}`, data),
+  deleteUser: (id) => apiClient.delete(`/admin/users/${id}`),
+  getUserStats: () => apiClient.get("/admin/users/stats"),
 };
 export default userAPI;

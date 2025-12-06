@@ -7,6 +7,7 @@ import Breadcrumb from "@/components/Breadcrumb";
 import Footer from "./components/Footer";
 import { useCart } from "../../context/CartProvider";
 import WarningModalSize from "./components/WarningModalSize";
+import {  Folder, Home, Package } from "lucide-react";
 
 export default function ProductDetailPage() {
   const { slug } = useParams();
@@ -56,12 +57,13 @@ export default function ProductDetailPage() {
       <Breadcrumb
         className="mx-6 my-4"
         items={[
-          { label: "Trang chủ", href: "/" },
+          { label: "Trang chủ", href: "/",icon: <Home size={14}/> },
           {
             label: product.categories[0]?.name || "Danh mục",
             href: `/danh-muc/${product.categories[0]?.slug}`,
+             icon: <Folder className="w-4 h-4" />
           },
-          { label: product.name },
+          { label: product.name , icon: <Package  className="w-4 h-4" /> },
         ]}
       />
 
@@ -182,7 +184,7 @@ export default function ProductDetailPage() {
 
                   {!exists && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="relative w-full h-full flex items-center justify-center">
+                      <div className="relative flex items-center justify-center w-full h-full">
                         <div className="absolute w-[70%] h-[2px] bg-blue-200 rotate-45 rounded-full"></div>
                         <div className="absolute w-[70%] h-[2px] bg-blue-200 -rotate-45 rounded-full"></div>
                       </div>

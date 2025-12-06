@@ -29,6 +29,8 @@ import ProfilePage from "@/pages/client/ProfilePage.jsx";
 import Register from "@/pages/client/Register.jsx";
 import CartPage from "@/pages/client/CartPage.jsx";
 import ProductDetail from "@/pages/client/ProductDetail.jsx";
+import CategoryPage from "@/pages/client/CategoryPage.jsx";
+import SearchPage from "@/pages/client/SearchPage.jsx";
 
 export const routes = [
   //Client 
@@ -62,6 +64,14 @@ export const routes = [
     path: "/san-pham/:slug",
     element: <ProductDetail />,
   },
+  {
+    path: "/danh-muc/:slug",
+    element: <CategoryPage /> 
+  },
+  {
+      path: "/search",
+      element: <SearchPage />  
+    },
   // Admin Dashboard Routes
   {
     path: "/admin/login",

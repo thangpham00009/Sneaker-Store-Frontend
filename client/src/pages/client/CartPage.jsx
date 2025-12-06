@@ -4,10 +4,15 @@ import Navbar from "./components/Navbar";
 import { FaTrashAlt } from "react-icons/fa";
 import { useCart } from "@/context/CartProvider";
 import defaultImage from "../../assets/default.jpg";
+import { Home, ShoppingCart } from "lucide-react";
+import Breadcrumb from "@/components/Breadcrumb";
 
 const CartPage = () => {
   const { cart, removeFromCart, updateQuantity } = useCart();
-
+  const breadcrumbItems = [
+    { label: "Trang chủ", href: "/", icon: <Home size={14} /> },
+    { label: "Giỏ hàng", icon: <ShoppingCart size={14} /> },
+  ];
   const subtotal = cart.reduce((sum, item) => {
     const p = item.product ?? item;
     const quantity = item.quantity ?? 1;
@@ -28,6 +33,7 @@ const CartPage = () => {
       <Navbar onHeightChange={() => {}} />
 
       <div className="container px-4 py-10 mx-auto md:px-16">
+        <Breadcrumb items={breadcrumbItems} className="mb-6" />
         <h2 className="mb-6 text-3xl font-bold">Giỏ hàng của bạn</h2>
 
         <div className="overflow-x-auto border rounded-lg">

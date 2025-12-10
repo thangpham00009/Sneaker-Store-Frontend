@@ -40,7 +40,8 @@ export const categoryAPI = {
     });
   },
   delete: (id) => apiClient.delete(`/categories/${id}`),
-  getCategoryProducts: (id) => apiClient.get(`/categories/${id}/products`),
+  getCategoryProducts: (slug, params = {}) =>
+    apiClient.get(`/categories/${slug}/products`, { params }),
 };
 
 export default categoryAPI;

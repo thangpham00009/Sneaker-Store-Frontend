@@ -14,11 +14,14 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import productAPI from "../../../api/product.api";
 import categoryAPI from "../../../api/category.api";
 import brandAPI from "../../../api/brand.api";
-import { buildProductFilters, sortOptions } from "../../../helpers/productFilter";
+import {
+  buildProductFilters,
+  sortOptions,
+} from "../../../helpers/productFilter";
 import Breadcrumb from "../../../components/Breadcrumb";
 import WarningModal from "../../../components/WarningModal";
 import Pagination from "../../../components/Pagination";
-import CustomTooltip from "../../../components/CustomTooltip"; 
+import CustomTooltip from "../../../components/CustomTooltip";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);
@@ -34,7 +37,6 @@ export default function ProductsPage() {
   const [brands, setBrands] = useState([]);
 
   const [refreshing, setRefreshing] = useState(false);
-
   const [warningOpen, setWarningOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
 
@@ -42,14 +44,15 @@ export default function ProductsPage() {
 
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const page = parseInt(searchParams.get("page")) || 1;
 
-  // Load categories & brands
+  const limit = Number(searchParams.get("limit")) || 15; 
+  const page = Number(searchParams.get("page")) || 1;
+
   useEffect(() => {
     (async () => {
       try {
         const c = await categoryAPI.getAll({ limit: 1000 });
-        const b = await brandAPI.getAll({ limit: 1000 }); 
+        const b = await brandAPI.getAll({ limit: 1000 });
         setCategories(c.data?.data || []);
         setBrands(b.data?.data || []);
       } catch (error) {
@@ -58,65 +61,47 @@ export default function ProductsPage() {
     })();
   }, []);
 
-  // Load products
-const fetchProducts = async () => {
-  try {
-    setLoading(true);
+  // Fetch sản phẩm
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
 
-    const params = buildProductFilters({
-      search,
-      status,
-      brandId,
-      sort,
-      page,
-      limit: 15,
-    });
+      const params = buildProductFilters({
+        search,
+        status,
+        brandId,
+        sort,
+        page,
+        limit, 
+      });
 
-    const res = await productAPI.getAll(params);
+      const res = await productAPI.getAll(params);
 
-    let data = res.data?.data.data || [];
-    if (categoryId) {
-      data = data.filter((p) =>
-        Array.isArray(p.categories) &&
-        p.categories.some((c) => c.id === categoryId)
-      );
+      let data = res.data?.data?.data || [];
+
+      if (categoryId) {
+        data = data.filter((p) =>
+          p.categories?.some((c) => String(c.id) === String(categoryId))
+        );
+      }
+
+      setProducts(data);
+      setTotalPages(res.data?.data?.pagination?.totalPages || 1);
+    } catch (error) {
+      console.error("Lỗi khi fetch sản phẩm:", error);
+    } finally {
+      setLoading(false);
     }
-
-    setProducts(data);
-    setTotalPages(res.data?.pagination?.totalPages || 1);
-  } catch (error) {
-    console.error("Lỗi khi tải sản phẩm:", error);
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   useEffect(() => {
     fetchProducts();
-  }, [search, status, categoryId, brandId, sort, page]);
-  // Đồng bộ query params
-  useEffect(() => {
-    const params = buildProductFilters({
-      search,
-      status,
-      categoryId,
-      brandId,
-      sort,
-    });
-    params.page = 1;
-    setSearchParams(params);
-  }, [search, status, categoryId, brandId, sort]);
+  }, [page, limit, search, status, categoryId, brandId, sort]);
 
   const handlePageChange = (newPage) => {
-    const params = buildProductFilters({
-      search,
-      status,
-      categoryId,
-      brandId,
-      sort,
-      page: newPage,
-    });
+    const params = Object.fromEntries(searchParams.entries());
+    params.page = newPage;
+    params.limit = limit; 
     setSearchParams(params);
   };
 
@@ -133,7 +118,7 @@ const fetchProducts = async () => {
       setProducts((prev) => prev.filter((p) => p.id !== productToDelete.id));
       setWarningOpen(false);
     } catch (error) {
-      console.error("Lỗi khi xóa sản phẩm:", error);
+      console.error("Lỗi xóa sản phẩm:", error);
     }
   };
 
@@ -295,20 +280,21 @@ const fetchProducts = async () => {
           </div>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left text-gray-700">
+       {/* Table */}
+       <div className="overflow-x-hidden">
+          <table className="min-w-full text-sm text-left text-gray-700">
             <thead className="text-xs text-gray-600 uppercase bg-gray-100 border-b">
               <tr>
                 <th className="px-4 py-3">Sản phẩm</th>
                 <th className="px-4 py-3">Danh mục</th>
                 <th className="px-4 py-3">Thương hiệu</th>
                 <th className="px-4 py-3">Giá gốc</th>
-                <th className="px-4 py-3">Giá giảm</th> 
+                <th className="px-4 py-3">Giá giảm</th>
                 <th className="px-4 py-3 text-center">Trạng thái</th>
                 <th className="px-4 py-3 text-center">Hành động</th>
               </tr>
             </thead>
+
             <tbody>
               {loading ? (
                 <tr>
@@ -319,17 +305,20 @@ const fetchProducts = async () => {
                 </tr>
               ) : products.length > 0 ? (
                 products.map((p) => (
-                  <tr key={p.id} className="transition border-b hover:bg-gray-50">
+                  <tr
+                    key={p.id}
+                    className="transition border-b hover:bg-gray-50"
+                  >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2 font-medium">
-                      <img
+                        <img
                           src={
-                            p.images?.find(img => img.isDefault)?.url || "/default-product.jpg"
+                            p.images?.find((img) => img.isDefault)?.url ||
+                            "/default-product.jpg"
                           }
                           alt={p.name}
                           className="object-cover w-12 h-12 border rounded-md"
                         />
-
                         {p.name}
                       </div>
                     </td>
@@ -347,9 +336,13 @@ const fetchProducts = async () => {
                     <td className="px-4 py-3 font-semibold text-red-600">
                       {formatPrice(p.price)}
                     </td>
+
                     <td className="px-4 py-3 font-semibold text-green-600">
-                      {p.discountPrice && p.discountPrice > 0 ? formatPrice(p.discountPrice) : "—"}
+                      {p.discountPrice && p.discountPrice > 0
+                        ? formatPrice(p.discountPrice)
+                        : "—"}
                     </td>
+
                     <td className="px-4 py-3 text-center">
                       <span
                         className={`px-2 py-1 text-xs rounded-full ${
@@ -375,7 +368,9 @@ const fetchProducts = async () => {
 
                         <CustomTooltip text="Chỉnh sửa sản phẩm">
                           <button
-                            onClick={() => navigate(`/admin/products/${p.id}/edit`)}
+                            onClick={() =>
+                              navigate(`/admin/products/${p.id}/edit`)
+                            }
                             className="p-2 text-blue-600 bg-blue-100 rounded-full hover:bg-blue-200"
                           >
                             <Edit3 size={16} />

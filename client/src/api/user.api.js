@@ -5,6 +5,8 @@ export const userAPI = {
   login: (credentials) => apiClient.post("/user/login", credentials),
   logout: () => apiClient.post("/user/logout"),
   getProfile: () => apiClient.get("/user/profile"),
+  updateProfile: (data) => apiClient.put("/user/profile", data),
+  addAddress: (data) => apiClient.post("/user/address", data),
   refreshToken: () => apiClient.post("/user/refresh-token"),
 
   getAllUsers: () => apiClient.get("/admin/users"),

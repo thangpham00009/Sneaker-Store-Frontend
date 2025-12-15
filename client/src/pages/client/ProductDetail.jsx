@@ -42,11 +42,12 @@ export default function ProductDetailPage() {
 
   const sizeMap = {};
   product.sizes?.forEach((s) => {
-    sizeMap[s.size] = s.stock;
+    sizeMap[String(s.size)] = s.stock;
   });
 
 
-  const selectedStock = selectedSize ? sizeMap[selectedSize] : null;
+  const selectedStock =
+  selectedSize !== null ? sizeMap[String(selectedSize)] : null;
   const isOutOfStock = selectedStock === 0;
 
   return (
@@ -162,18 +163,18 @@ export default function ProductDetailPage() {
               <label className="block mb-2 font-semibold">Chọn size:</label>
               <div className="grid grid-cols-6 gap-2">
                 {sizes.map((size) => {
-                  const exists = sizeMap[size] !== undefined;
-                  const stock = sizeMap[size] || 0;
+                  const exists = sizeMap[String(size)] !== undefined;
+                  const stock = sizeMap[String(size)] || 0;
                   const disabled = !exists || stock === 0;
 
                   return (
                   <div
                   key={size}
-                  onClick={() => !disabled && setSelectedSize(size)}
+                 onClick={() => !disabled && setSelectedSize(String(size))}
                   className={`
                     relative cursor-pointer border rounded text-center py-2 select-none transition
                     ${
-                      selectedSize === size && !disabled
+                      selectedSize === String(size) && !disabled
                         ? "bg-red-500 text-white font-semibold"
                         : "hover:border-red-500"
                     }
@@ -248,18 +249,47 @@ export default function ProductDetailPage() {
                         price:
                           product.discountPrice || product.price,
                         images: product.images,
-                        size: selectedSize,
                       },
-                      quantity
+                      quantity,
+                      selectedSize
                     );
+                    console.log("Selected size:", selectedSize, typeof selectedSize);
                   }}
                 >
                   Thêm vào giỏ hàng
                 </button>
 
-                <button className="flex-1 px-6 py-3 font-semibold text-white uppercase transition bg-red-600 rounded-lg hover:bg-red-700">
-                  Mua ngay
-                </button>
+
+               <button
+              className="flex-1 px-6 py-3 font-semibold text-white uppercase transition bg-red-600 rounded-lg hover:bg-red-700"
+              onClick={() => {
+                if (!selectedSize) {
+                  setShowWarning(true);
+                  return;
+                }
+
+                const checkoutItem = {
+                  product: {
+                    id: product.id,
+                    name: product.name,
+                    price: product.discountPrice || product.price,
+                    images: product.images,
+                  },
+                  quantity,
+                  size: selectedSize,
+                };
+
+                navigate("/checkout", {
+                  state: {
+                    buyNow: true,
+                    items: [checkoutItem],
+                  },
+                });
+              }}
+            >
+              Mua ngay
+            </button>
+
               </>
             )}
           </div>

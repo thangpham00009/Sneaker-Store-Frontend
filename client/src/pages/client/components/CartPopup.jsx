@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useCart } from "../../../context/CartProvider";
-
+import defaultImage from "@/assets/default.jpg";
 const formatCurrency = (amount) =>
   new Intl.NumberFormat("vi-VN", {
     style: "currency",
@@ -14,7 +14,10 @@ const CartPopup = () => {
 
   if (!showCartPopup || !cart || cart.length === 0) return null;
 
-  const totalAmount = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+const totalAmount = cart.reduce((sum, item) => {
+  const price = item.product?.discountPrice ?? item.product?.price ?? item.price ?? 0;
+  return sum + price * item.quantity;
+}, 0);
 
   return (
     <div
@@ -38,59 +41,56 @@ const CartPopup = () => {
 
         {/* Product list */}
         <div className="pr-2 overflow-y-auto max-h-80">
-          {cart.map((item, index) => (
-            <div key={index} className="flex items-center gap-4 py-3 border-b">
-              <img
-                src={item.images?.[0]?.url || item.image || "/placeholder.png"}
-                alt={item.name}
-                className="object-cover w-20 h-20 border rounded-md"
-              />
-              <div className="flex-1">
-                <p className="font-semibold text-gray-800">{item.name}</p>
-                {item.size && <p className="text-sm text-gray-600">Size: {item.size}</p>}
+      {cart.map((item, index) => {
+  const name = item?.name ?? "Sản phẩm không xác định";
+  const img = item?.images?.[0]?.url ?? defaultImage;
+  const price = item?.discountPrice ?? item?.price ?? 0;
 
-                {/* Quantity */}
-                <div className="flex items-center mt-2">
-                  <button
-                    className="border w-7 h-7 rounded-l-md hover:bg-gray-100"
-                    onClick={() =>
-                      updateQuantity(item.id, item.quantity > 1 ? item.quantity - 1 : 1, item.size)
-                    }
-                  >
-                    -
-                  </button>
+  return (
+    <div key={item.id ?? index} className="flex items-center gap-4 py-3 border-b">
+      <img src={img} alt={name} className="object-cover w-20 h-20 border rounded-md" />
 
-                  <input
-                    type="number"
-                    value={item.quantity}
-                    min="1"
-                    onChange={(e) =>
-                      updateQuantity(item.id, parseInt(e.target.value) || 1, item.size)
-                    }
-                    className="w-10 text-center border-t border-b"
-                  />
+      <div className="flex-1">
+        <p className="font-semibold text-gray-800">{name}</p>
+        <p className="text-sm text-gray-600">Size: {item.size}</p>
 
-                  <button
-                    className="border w-7 h-7 rounded-r-md hover:bg-gray-100"
-                    onClick={() => updateQuantity(item.id, item.quantity + 1, item.size)}
-                  >
-                    +
-                  </button>
-                </div>
+        <div className="flex items-center mt-2">
+          <button
+            className="border w-7 h-7 rounded-l-md"
+            onClick={() =>
+              updateQuantity(item.id, Math.max(1, item.quantity - 1), item.size)
+            }
+          >-</button>
 
-                <button
-                  onClick={() => removeFromCart(item.id, item.size)}
-                  className="mt-1 text-xs text-red-500 hover:underline"
-                >
-                  × Xóa sản phẩm
-                </button>
-              </div>
+          <input
+            type="number"
+            value={item.quantity}
+            min="1"
+            onChange={(e) =>
+              updateQuantity(item.id, parseInt(e.target.value) || 1, item.size)
+            }
+            className="w-10 text-center border-t border-b"
+          />
 
-              <p className="font-bold text-red-500">
-                {formatCurrency(item.price * item.quantity)}
-              </p>
-            </div>
-          ))}
+          <button
+            className="border w-7 h-7 rounded-r-md"
+            onClick={() => updateQuantity(item.id, item.quantity + 1, item.size)}
+          >+</button>
+        </div>
+
+        <button
+          onClick={() => removeFromCart(item.id, item.size)}
+          className="mt-1 text-xs text-red-500 hover:underline"
+        >
+          × Xóa sản phẩm
+        </button>
+      </div>
+
+      <p className="font-bold text-red-500">{formatCurrency(price * item.quantity)}</p>
+    </div>
+  );
+})}
+
         </div>
 
         {/* Footer */}

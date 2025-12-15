@@ -33,7 +33,11 @@ export const CartProvider = ({ children }) => {
 
       if (localCart.length > 0) {
         for (let item of localCart) {
-          await cartAPI.addToCart({ productId: item.id, quantity: item.quantity });
+        await cartAPI.addToCart({
+          productId: Number(item.id),
+          quantity: Number(item.quantity),
+          size: String(item.size),
+        });
         }
         localStorage.removeItem("cart");
       }
@@ -59,14 +63,20 @@ export const CartProvider = ({ children }) => {
         setCart(cart.map((item) => 
           item.id === product.id && item.size === size ? {...item, quantity: item.quantity + quantity} : item
         ));
-      } else {
+      } else {  
         setCart([...cart, { ...product, quantity, size }]);
       }
     } else {
-      await cartAPI.addToCart({ productId: product.id, quantity, size });
-      const res = await cartAPI.getCart();
-      setCart(res.data?.items || []);
-    }
+        await cartAPI.addToCart({
+          productId: Number(product.id),
+          quantity: Number(quantity),
+          size: String(size),
+        });
+
+        const res = await cartAPI.getCart();
+        setCart(res.data?.items || []);
+      }
+
 
     setShowCartPopup(true);
   };

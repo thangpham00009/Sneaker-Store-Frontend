@@ -11,7 +11,10 @@ export const cartAPI = {
   updateCartItem: (data) => apiClient.put("/cart", data),
 
   // Xóa 1 item khỏi giỏ theo productId
-  removeCartItem: (productId) => apiClient.delete(`/cart/${productId}`),
+    removeCartItem: (productId, size) =>
+      apiClient.delete(`/cart/${productId}`, {
+        params: { size },
+      }),
 
   // Xóa toàn bộ giỏ hàng
   clearCart: () => apiClient.delete("/cart"),

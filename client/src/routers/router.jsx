@@ -31,6 +31,7 @@ import CartPage from "@/pages/client/CartPage.jsx";
 import ProductDetail from "@/pages/client/ProductDetail.jsx";
 import CategoryPage from "@/pages/client/CategoryPage.jsx";
 import SearchPage from "@/pages/client/SearchPage.jsx";
+import CheckoutPage from "@/pages/client/CheckoutPage.jsx";
 
 export const routes = [
   //Client 
@@ -71,6 +72,10 @@ export const routes = [
   {
       path: "/search",
       element: <SearchPage />  
+    },
+    {
+      path: "/checkout",
+      element: <CheckoutPage />
     },
   // Admin Dashboard Routes
   {

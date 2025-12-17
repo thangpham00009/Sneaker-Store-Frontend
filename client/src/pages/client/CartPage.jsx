@@ -94,7 +94,7 @@ const CartPage = () => {
                     const discountPrice = product.discountPrice ?? originalPrice;
 
                     return (
-                      <tr key={`${product.id}-${item.size || ""}`} className="border-b">
+                      <tr key={item.key} className="border-b">
                         <td className="p-4 text-center">
                           <img
                             src={
@@ -114,14 +114,14 @@ const CartPage = () => {
                           <div className="flex items-center justify-center gap-2">
                             <button
                               className="px-2 py-1 border"
-                              onClick={() => updateQuantity(product.id, item.quantity - 1, item.size)}
+                             onClick={() => updateQuantity(item.key, item.quantity - 1)}
                             >
                               -
                             </button>
                             <span>{item.quantity}</span>
                             <button
                               className="px-2 py-1 border"
-                              onClick={() => updateQuantity(product.id, item.quantity + 1, item.size)}
+                              onClick={() => updateQuantity(item.key, item.quantity + 1)}
                             >
                               +
                             </button>
@@ -131,7 +131,7 @@ const CartPage = () => {
                         <td className="p-4 text-center">
                           <button
                             className="text-gray-500 hover:text-red-500"
-                            onClick={() => removeFromCart(product.id, item.size)}
+                            onClick={() => removeFromCart(item.key)}
                           >
                             <FaTrashAlt />
                           </button>

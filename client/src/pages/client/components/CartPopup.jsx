@@ -42,9 +42,14 @@ const totalAmount = cart.reduce((sum, item) => {
         {/* Product list */}
         <div className="pr-2 overflow-y-auto max-h-80">
       {cart.map((item, index) => {
-  const name = item?.name ?? "Sản phẩm không xác định";
-  const img = item?.images?.[0]?.url ?? defaultImage;
-  const price = item?.discountPrice ?? item?.price ?? 0;
+      const product = item.product ?? item;
+
+      const name = product?.name ?? "Sản phẩm không xác định";
+      const img = product?.images?.[0]?.url ?? defaultImage;
+      const price =
+        product?.discountPrice ??
+        product?.price ??
+        0;
 
   return (
     <div key={item.id ?? index} className="flex items-center gap-4 py-3 border-b">
@@ -54,29 +59,39 @@ const totalAmount = cart.reduce((sum, item) => {
         <p className="font-semibold text-gray-800">{name}</p>
         <p className="text-sm text-gray-600">Size: {item.size}</p>
 
-        <div className="flex items-center mt-2">
-          <button
-            className="border w-7 h-7 rounded-l-md"
-            onClick={() =>
-              updateQuantity(item.id, Math.max(1, item.quantity - 1), item.size)
-            }
-          >-</button>
+            <div className="flex items-center mt-2">
+        <button
+          className="border w-7 h-7 rounded-l-md"
+          onClick={() =>
+            updateQuantity(item.key, Math.max(1, item.quantity - 1))
+          }
+        >
+          -
+        </button>
 
-          <input
-            type="number"
-            value={item.quantity}
-            min="1"
-            onChange={(e) =>
-              updateQuantity(item.id, parseInt(e.target.value) || 1, item.size)
-            }
-            className="w-10 text-center border-t border-b"
-          />
+        <input
+          type="number"
+          value={item.quantity}
+          min="1"
+          onChange={(e) =>
+            updateQuantity(
+              item.key,
+              Math.max(1, parseInt(e.target.value) || 1)
+            )
+          }
+          className="w-10 text-center border-t border-b"
+        />
 
-          <button
-            className="border w-7 h-7 rounded-r-md"
-            onClick={() => updateQuantity(item.id, item.quantity + 1, item.size)}
-          >+</button>
-        </div>
+        <button
+          className="border w-7 h-7 rounded-r-md"
+          onClick={() =>
+            updateQuantity(item.key, item.quantity + 1)
+          }
+        >
+          +
+        </button>
+      </div>
+
 
         <button
           onClick={() => removeFromCart(item.id, item.size)}

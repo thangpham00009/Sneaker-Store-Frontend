@@ -2,7 +2,6 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import userAPI from "../../api/user.api";
 import { hasUserRefreshToken } from "../../services/cookieUtils";
 
-
 export const registerUser = createAsyncThunk(
   "auth/registerUser",
   async (credentials, { rejectWithValue }) => {
@@ -79,10 +78,27 @@ export const checkUserAuth = createAsyncThunk(
     }
   }
 );
+export const refreshUserProfile = createAsyncThunk(
+  "auth/refreshUserProfile",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await userAPI.getProfile();
+      if (res.data.status === "success") {
+        return res.data.data;
+      }
+      return rejectWithValue("Không thể lấy thông tin người dùng");
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Lỗi lấy profile"
+      );
+    }
+  }
+);
 
 const initialState = {
   user: null,
   isAuthenticated: false,
+  profileLoaded: false,
   loading: false,
   error: null,
   checkingAuth: true,
@@ -106,6 +122,7 @@ const userAuthSlice = createSlice({
         state.loading = false;
         state.user = action.payload.user;
         state.isAuthenticated = true;
+        state.checkingAuth = false;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
@@ -115,6 +132,7 @@ const userAuthSlice = createSlice({
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
         state.isAuthenticated = false;
+        state.checkingAuth = false;
       })
 
       .addCase(checkUserAuth.fulfilled, (state, action) => {
@@ -126,6 +144,18 @@ const userAuthSlice = createSlice({
         state.user = null;
         state.isAuthenticated = false;
         state.checkingAuth = false;
+      })
+      .addCase(refreshUserProfile.pending, (state) => {
+        state.profileLoaded = false;
+      })
+
+      .addCase(refreshUserProfile.fulfilled, (state, action) => {
+        state.user = action.payload;
+        state.profileLoaded = true;
+      })
+
+      .addCase(refreshUserProfile.rejected, (state) => {
+        state.profileLoaded = false;
       });
   },
 });

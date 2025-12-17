@@ -1,37 +1,29 @@
-// src/api/address.api.js
-const BASE_URL = "https://esgoo.net/api-tinhthanh";
+const BASE_URL = "/api/v1/address";
 
+const mapToOption = (item) => ({
+  value: item.id,
+  label: item.name,
+});
+
+// ===== PROVINCES =====
 export const fetchProvinces = async () => {
-  const res = await fetch(`${BASE_URL}/1/0.htm`);
-  const data = await res.json();
-
-  if (data.error === 0) {
-    return data.data;
-  }
-
-  throw new Error("Cannot fetch provinces");
+  const res = await fetch(`${BASE_URL}/provinces`);
+  const json = await res.json();
+  return (json.data || []).map(mapToOption);
 };
 
+// ===== DISTRICTS =====
 export const fetchDistricts = async (provinceId) => {
-  if (!provinceId || isNaN(Number(provinceId))) return [];
-
-  try {
-    const res = await fetch(`${BASE_URL}/2/${provinceId}.htm`);
-    const data = await res.json();
-    return data.error === 0 ? data.data : [];
-  } catch {
-    return [];
-  }
+  if (!provinceId) return [];
+  const res = await fetch(`${BASE_URL}/districts/${provinceId}`);
+  const json = await res.json();
+  return (json.data || []).map(mapToOption);
 };
 
+// ===== WARDS =====  
 export const fetchWards = async (districtId) => {
-  if (!districtId || isNaN(Number(districtId))) return [];
-
-  try {
-    const res = await fetch(`${BASE_URL}/3/${districtId}.htm`);
-    const data = await res.json();
-    return data.error === 0 ? data.data : [];
-  } catch {
-    return [];
-  }
+  if (!districtId) return [];
+  const res = await fetch(`${BASE_URL}/wards/${districtId}`);
+  const json = await res.json();
+  return (json.data || []).map(mapToOption);
 };

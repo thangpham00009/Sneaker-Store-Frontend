@@ -17,7 +17,7 @@ export const CartProvider = ({ children }) => {
   useEffect(() => {
     if (!isAuthenticated) {
       const stored = localStorage.getItem("cart");
-      if (stored) setCart(JSON.parse(stored));
+      if (stored) setCart(JSON.parse(stored).map(normalizeCartItem));
       setInitialized(true);
     }
   }, [isAuthenticated]);
@@ -43,7 +43,7 @@ export const CartProvider = ({ children }) => {
       }
 
       const finalCartRes = await cartAPI.getCart();
-      setCart(finalCartRes.data?.items || []);
+      setCart((finalCartRes.data?.items || []).map(normalizeCartItem));
     };
     syncCartWhenLogin();
   }, [isAuthenticated]);
@@ -54,57 +54,96 @@ export const CartProvider = ({ children }) => {
     }
   }, [cart, isAuthenticated, initialized]);
 
-  const addToCart = async (product, quantity = 1, size) => {
-    if (!size) return alert("Vui lòng chọn size");
+    const normalizeCartItem = (item) => {
+      const product = item.product ?? item;
 
-    if (!isAuthenticated) {
-      const exist = cart.find((item) => item.id === product.id && item.size === size);
-      if (exist) {
-        setCart(cart.map((item) => 
-          item.id === product.id && item.size === size ? {...item, quantity: item.quantity + quantity} : item
-        ));
-      } else {  
-        setCart([...cart, { ...product, quantity, size }]);
-      }
-    } else {
-        await cartAPI.addToCart({
-          productId: Number(product.id),
-          quantity: Number(quantity),
-          size: String(size),
-        });
+      const productId =
+        item.product_id ??
+        item.productId ??
+        product.id;
 
-        const res = await cartAPI.getCart();
-        setCart(res.data?.items || []);
-      }
+      const size = item.size;
 
+      return {
+        key: `${productId}-${size}`,
+        productId,
+        size,
+        quantity: item.quantity ?? 1,
+        product,
+      };
+    };
 
-    setShowCartPopup(true);
-  };
+ const addToCart = async (product, quantity = 1, size) => {
+  if (!size) return alert("Vui lòng chọn size");
 
-  const removeFromCart = async (id, size) => {
-    if (!isAuthenticated) {
-      setCart(cart.filter((item) => !(item.id === id && item.size === size)));
-    } else {
-      await cartAPI.removeCartItem(id, size);
-      const res = await cartAPI.getCart();
-      setCart(res.data?.items || []);
-    }
-  };
+  const key = `${product.id}-${size}`;
 
-  const updateQuantity = async (id, quantity, size) => {
-    const qty = parseInt(quantity);
-    if (qty < 1) return;
+  if (!isAuthenticated) {
+    setCart((prev) => {
+      const exist = prev.find((i) => i.key === key);
 
-    if (!isAuthenticated) {
-      setCart(cart.map((item) => 
-        item.id === id && item.size === size ? { ...item, quantity: qty } : item
-      ));
-    } else {
-      await cartAPI.updateCartItem({ productId: id, quantity: qty, size });
-      const res = await cartAPI.getCart();
-      setCart(res.data?.items || []);
-    }
-  };
+      const newCart = exist
+        ? prev.map((i) =>
+            i.key === key
+              ? { ...i, quantity: i.quantity + quantity }
+              : i
+          )
+        : [...prev, normalizeCartItem({ product, quantity, size })];
+
+      localStorage.setItem("cart", JSON.stringify(newCart));
+      return newCart;
+    });
+  } else {
+    await cartAPI.addToCart({
+      productId: product.id,
+      quantity,
+      size,
+    });
+
+    const res = await cartAPI.getCart();
+    setCart(res.data.items.map(normalizeCartItem));
+  }
+
+  setShowCartPopup(true);
+};
+
+const removeFromCart = async (key) => {
+  if (!isAuthenticated) {
+    setCart((prev) => {
+      const newCart = prev.filter((i) => i.key !== key);
+      localStorage.setItem("cart", JSON.stringify(newCart));
+      return newCart;
+    });
+  } else {
+    const [productId, size] = key.split("-");
+    await cartAPI.removeCartItem(productId, size);
+    const res = await cartAPI.getCart();
+    setCart(res.data.items.map(normalizeCartItem));
+  }
+};
+
+ const updateQuantity = async (key, quantity) => {
+  if (quantity < 1) return;
+
+  if (!isAuthenticated) {
+    setCart((prev) => {
+      const newCart = prev.map((i) =>
+        i.key === key ? { ...i, quantity } : i
+      );
+      localStorage.setItem("cart", JSON.stringify(newCart));
+      return newCart;
+    });
+  } else {
+    const [productId, size] = key.split("-");
+    await cartAPI.updateCartItem({
+      productId,
+      size,
+      quantity,
+    });
+    const res = await cartAPI.getCart();
+    setCart(res.data.items.map(normalizeCartItem));
+  }
+};
 
   return (
     <CartContext.Provider value={{ cart, setCart, addToCart, removeFromCart, updateQuantity, showCartPopup, setShowCartPopup }}>

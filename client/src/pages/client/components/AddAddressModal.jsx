@@ -31,31 +31,22 @@ export function AddAddressModal({ onClose, onSuccess }) {
   const [provinceId, setProvinceId] = useState("");
   const [districtId, setDistrictId] = useState("");
 
+  /* ===================== LOAD PROVINCES ===================== */
   useEffect(() => {
     fetchProvinces().then(setProvinces).catch(console.error);
   }, []);
 
-  useEffect(() => {
-  if (!showSuccess) return;
-
-  const timer = setTimeout(() => {
-    setShowSuccess(false);
-    onClose();
-  }, 2000); // 2 giây
-
-  return () => clearTimeout(timer);
-}, [showSuccess]);
+  /* ===================== AUTO CLOSE SUCCESS ===================== */
   useEffect(() => {
     if (!showSuccess) return;
-
     const timer = setTimeout(() => {
       setShowSuccess(false);
       onClose();
-    }, 5000); 
-
+    }, 2000);
     return () => clearTimeout(timer);
-  }, [showSuccess]);
+  }, [showSuccess, onClose]);
 
+  /* ===================== PROVINCE ===================== */
   const handleProvinceChange = async (e) => {
     const id = e.target.value;
     setProvinceId(id);
@@ -63,13 +54,11 @@ export function AddAddressModal({ onClose, onSuccess }) {
     setDistricts([]);
     setWards([]);
 
-    const province = provinces.find(
-      (p) => String(p.id) === String(id)
-    );
+    const province = provinces.find(p => p.value === id);
 
-    setForm((prev) => ({
+    setForm(prev => ({
       ...prev,
-      city: province?.full_name || "",
+      city: province?.label || "",
       district: "",
       ward: "",
     }));
@@ -80,19 +69,17 @@ export function AddAddressModal({ onClose, onSuccess }) {
     }
   };
 
-  /* ===================== HUYỆN ===================== */
+  /* ===================== DISTRICT ===================== */
   const handleDistrictChange = async (e) => {
     const id = e.target.value;
     setDistrictId(id);
     setWards([]);
 
-    const district = districts.find(
-      (d) => String(d.id) === String(id)
-    );
+    const district = districts.find(d => d.value === id);
 
-    setForm((prev) => ({
+    setForm(prev => ({
       ...prev,
-      district: district?.full_name || "",
+      district: district?.label || "",
       ward: "",
     }));
 
@@ -102,9 +89,8 @@ export function AddAddressModal({ onClose, onSuccess }) {
     }
   };
 
-  const handleSubmit = () => {
-    setShowWarning(true);
-  };
+  /* ===================== SUBMIT ===================== */
+  const handleSubmit = () => setShowWarning(true);
 
   const handleConfirmSubmit = async () => {
     try {
@@ -150,9 +136,9 @@ export function AddAddressModal({ onClose, onSuccess }) {
           onChange={handleProvinceChange}
         >
           <option value="">Chọn Tỉnh / Thành phố</option>
-          {provinces.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.full_name}
+          {provinces.map(p => (
+            <option key={p.value} value={p.value}>
+              {p.label}
             </option>
           ))}
         </select>
@@ -165,25 +151,26 @@ export function AddAddressModal({ onClose, onSuccess }) {
           onChange={handleDistrictChange}
         >
           <option value="">Chọn Quận / Huyện</option>
-          {districts.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.full_name}
+          {districts.map(d => (
+            <option key={d.value} value={d.value}>
+              {d.label}
             </option>
           ))}
         </select>
 
-        {/* PHƯỜNG / XÃ */}
+        {/* PHƯỜNG */}
         <select
           className="w-full p-2 mb-2 border rounded"
           disabled={!wards.length}
-          onChange={(e) =>
-            setForm({ ...form, ward: e.target.value })
-          }
+          onChange={(e) => {
+            const ward = wards.find(w => w.value === e.target.value);
+            setForm({ ...form, ward: ward?.label || "" });
+          }}
         >
           <option value="">Chọn Phường / Xã</option>
-          {wards.map((w) => (
-            <option key={w.id} value={w.full_name}>
-              {w.full_name}
+          {wards.map(w => (
+            <option key={w.value} value={w.value}>
+              {w.label}
             </option>
           ))}
         </select>
@@ -233,16 +220,15 @@ export function AddAddressModal({ onClose, onSuccess }) {
         </div>
       </div>
 
-    <WarningModal
-    open={showWarning}
-    title="Xác nhận thêm địa chỉ"
-    message="Bạn có chắc chắn muốn thêm địa chỉ mới không?"
-    confirmText="Thêm"
-    variant="primary"
-    onCancel={() => setShowWarning(false)}
-    onConfirm={handleConfirmSubmit}
-  />
-
+      <WarningModal
+        open={showWarning}
+        title="Xác nhận thêm địa chỉ"
+        message="Bạn có chắc chắn muốn thêm địa chỉ mới không?"
+        confirmText="Thêm"
+        variant="primary"
+        onCancel={() => setShowWarning(false)}
+        onConfirm={handleConfirmSubmit}
+      />
 
       {showSuccess && (
         <SuccessNotification

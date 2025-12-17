@@ -8,20 +8,24 @@ import {
 import WarningModal from "@/components/WarningModal";
 import SuccessNotification from "@/components/SuccessNotification";
 
+/* ================== HELPERS ================== */
 const normalize = (str = "") =>
   str
     .toLowerCase()
-    .replace(/^(tỉnh|thành phố|quận|huyện|phường|xã)\s+/i, "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/^(tinh|thanh pho|quan|huyen|phuong|xa)\s+/i, "")
+    .replace(/\s+/g, " ")
     .trim();
 
+// API trả { value, label }
 const getIdByName = (list, name) =>
-  list.find(
-    (i) => normalize(i.full_name) === normalize(name)
-  )?.id || "";
+  list.find((i) => normalize(i.label) === normalize(name))?.value || "";
 
-const getNameById = (list, id) =>
-  list.find((i) => String(i.id) === String(id))?.full_name || "";
+const getNameById = (list, value) =>
+  list.find((i) => String(i.value) === String(value))?.label || "";
 
+/* ================== COMPONENT ================== */
 export function EditProfileModal({ user, onClose, onSuccess }) {
   const [form, setForm] = useState({
     name: user.username || "",
@@ -38,50 +42,54 @@ export function EditProfileModal({ user, onClose, onSuccess }) {
 
   const [showWarning, setShowWarning] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
   const selectedAddress = form.addresses[selectedIndex];
-  
+
+  /* ========== LOAD PROVINCES ========== */
   useEffect(() => {
     fetchProvinces().then(setProvinces);
   }, []);
 
+  /* ========== MAP NAME → VALUE KHI INIT ========== */
   useEffect(() => {
-    if (!provinces.length || !form.addresses.length) return;
+    if (!provinces.length || !form.addresses.length || initialized) return;
 
     const init = async () => {
-      const newAddresses = await Promise.all(
+      const mapped = await Promise.all(
         form.addresses.map(async (addr) => {
-          const cityId = getIdByName(provinces, addr.city);
+          const cityValue = getIdByName(provinces, addr.city);
 
-          let districtId = "";
-          let wardId = "";
+          let districtValue = "";
+          let wardValue = "";
 
-          if (cityId) {
-            const dList = await fetchDistricts(cityId);
-            districtId = getIdByName(dList, addr.district);
+          if (cityValue) {
+            const dList = await fetchDistricts(cityValue);
+            districtValue = getIdByName(dList, addr.district);
 
-            if (districtId) {
-              const wList = await fetchWards(districtId);
-              wardId = getIdByName(wList, addr.ward);
+            if (districtValue) {
+              const wList = await fetchWards(districtValue);
+              wardValue = getIdByName(wList, addr.ward);
             }
           }
 
           return {
             ...addr,
-            city: cityId,
-            district: districtId,
-            ward: wardId,
+            city: cityValue,
+            district: districtValue,
+            ward: wardValue,
           };
         })
       );
 
-      setForm((prev) => ({ ...prev, addresses: newAddresses }));
+      setForm((prev) => ({ ...prev, addresses: mapped }));
+      setInitialized(true);
     };
 
     init();
   }, [provinces]);
 
-
+  /* ========== LOAD DISTRICTS ========== */
   useEffect(() => {
     if (!selectedAddress?.city) {
       setDistricts([]);
@@ -92,7 +100,7 @@ export function EditProfileModal({ user, onClose, onSuccess }) {
     fetchDistricts(selectedAddress.city).then(setDistricts);
   }, [selectedIndex, selectedAddress?.city]);
 
-
+  /* ========== LOAD WARDS ========== */
   useEffect(() => {
     if (!selectedAddress?.district) {
       setWards([]);
@@ -102,6 +110,7 @@ export function EditProfileModal({ user, onClose, onSuccess }) {
     fetchWards(selectedAddress.district).then(setWards);
   }, [selectedAddress?.district]);
 
+  /* ========== HELPERS ========== */
   const updateSelectedAddress = (field, value) => {
     setForm((prev) => {
       const updated = [...prev.addresses];
@@ -123,63 +132,51 @@ export function EditProfileModal({ user, onClose, onSuccess }) {
     }));
   };
 
+  /* ========== SUBMIT ========== */
   const submitProfile = async () => {
     const addresses = await Promise.all(
       form.addresses.map(async (addr) => {
-        let districtName = "";
-        let wardName = "";
-
-        if (addr.city) {
-          const dList = await fetchDistricts(addr.city);
-          districtName =
-            dList.find((d) => String(d.id) === String(addr.district))
-              ?.full_name || "";
-
-          if (addr.district) {
-            const wList = await fetchWards(addr.district);
-            wardName =
-              wList.find((w) => String(w.id) === String(addr.ward))
-                ?.full_name || "";
-          }
-        }
+        const dList = addr.city ? await fetchDistricts(addr.city) : [];
+        const wList = addr.district ? await fetchWards(addr.district) : [];
 
         return {
           ...addr,
           city: getNameById(provinces, addr.city),
-          district: districtName,
-          ward: wardName,
+          district: getNameById(dList, addr.district),
+          ward: getNameById(wList, addr.ward),
         };
       })
     );
 
-    const payload = {
+    await userAPI.updateProfile({
       name: form.name,
       addresses,
-    };
-
-    if (form.newPassword) payload.password = form.newPassword;
-
-    await userAPI.updateProfile(payload);
+    });
 
     setShowSuccess(true);
-    onSuccess();
-    onClose();
+    onSuccess?.();
   };
 
   const handleSubmit = async () => {
-    if (form.newPassword || form.confirmPassword) {
-      if (form.newPassword !== form.confirmPassword) {
-        alert("Mật khẩu không khớp");
-        return;
-      }
+    if (
+      form.newPassword &&
+      form.newPassword !== form.confirmPassword
+    ) {
+      alert("Mật khẩu không khớp");
+      return;
+    }
+
+    if (form.newPassword) {
       setShowWarning(true);
       return;
     }
+
     await submitProfile();
   };
 
   if (!selectedAddress) return null;
 
+  /* ================== UI ================== */
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="w-full max-w-4xl p-6 bg-white rounded-lg">
@@ -191,7 +188,9 @@ export function EditProfileModal({ user, onClose, onSuccess }) {
             className="p-2 border rounded"
             placeholder="Tên"
             value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            onChange={(e) =>
+              setForm({ ...form, name: e.target.value })
+            }
           />
 
           <input
@@ -210,7 +209,10 @@ export function EditProfileModal({ user, onClose, onSuccess }) {
             placeholder="Nhập lại mật khẩu"
             value={form.confirmPassword}
             onChange={(e) =>
-              setForm({ ...form, confirmPassword: e.target.value })
+              setForm({
+                ...form,
+                confirmPassword: e.target.value,
+              })
             }
           />
         </div>
@@ -230,9 +232,13 @@ export function EditProfileModal({ user, onClose, onSuccess }) {
                 }`}
               >
                 <p className="font-medium">{addr.receiver_name}</p>
-                <p className="text-sm text-gray-600">{addr.address_line}</p>
+                <p className="text-sm text-gray-600">
+                  {addr.address_line}
+                </p>
                 {addr.is_default && (
-                  <span className="text-xs text-green-600">Mặc định</span>
+                  <span className="text-xs text-green-600">
+                    Mặc định
+                  </span>
                 )}
                 <button
                   onClick={(e) => {
@@ -247,10 +253,8 @@ export function EditProfileModal({ user, onClose, onSuccess }) {
             ))}
           </div>
 
-          {/* EDIT */}
+          {/* FORM */}
           <div className="col-span-2 p-4 border rounded bg-gray-50">
-            <h4 className="mb-3 font-semibold">Chỉnh sửa địa chỉ</h4>
-
             <input
               className="w-full p-2 mb-2 border rounded"
               placeholder="Tên người nhận"
@@ -278,14 +282,7 @@ export function EditProfileModal({ user, onClose, onSuccess }) {
               }
             />
 
-            <textarea
-              className="w-full p-2 mb-2 border rounded"
-              rows={2}
-              placeholder="Ghi chú"
-              value={selectedAddress.note || ""}
-              onChange={(e) => updateSelectedAddress("note", e.target.value)}
-            />
-
+            {/* PROVINCE */}
             <select
               className="w-full p-2 mb-2 border rounded"
               value={selectedAddress.city || ""}
@@ -297,12 +294,13 @@ export function EditProfileModal({ user, onClose, onSuccess }) {
             >
               <option value="">-- Tỉnh / Thành --</option>
               {provinces.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.full_name}
+                <option key={p.value} value={p.value}>
+                  {p.label}
                 </option>
               ))}
             </select>
 
+            {/* DISTRICT */}
             <select
               className="w-full p-2 mb-2 border rounded"
               value={selectedAddress.district || ""}
@@ -314,12 +312,13 @@ export function EditProfileModal({ user, onClose, onSuccess }) {
             >
               <option value="">-- Quận / Huyện --</option>
               {districts.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.full_name}
+                <option key={d.value} value={d.value}>
+                  {d.label}
                 </option>
               ))}
             </select>
 
+            {/* WARD */}
             <select
               className="w-full p-2 border rounded"
               value={selectedAddress.ward || ""}
@@ -330,8 +329,8 @@ export function EditProfileModal({ user, onClose, onSuccess }) {
             >
               <option value="">-- Phường / Xã --</option>
               {wards.map((w) => (
-                <option key={w.id} value={w.id}>
-                  {w.full_name}
+                <option key={w.value} value={w.value}>
+                  {w.label}
                 </option>
               ))}
             </select>
@@ -356,7 +355,6 @@ export function EditProfileModal({ user, onClose, onSuccess }) {
         title="Xác nhận đổi mật khẩu"
         message="Bạn có chắc chắn muốn đổi mật khẩu không?"
         confirmText="Đổi"
-        variant="primary"
         onCancel={() => setShowWarning(false)}
         onConfirm={async () => {
           setShowWarning(false);
@@ -373,4 +371,3 @@ export function EditProfileModal({ user, onClose, onSuccess }) {
     </div>
   );
 }
-  

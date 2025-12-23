@@ -13,9 +13,12 @@ const QuickViewPopup = ({ product, onClose }) => {
   const [selectedSize, setSelectedSize] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [showWarning, setShowWarning] = useState(false);
+  const selectedProductSize = product.sizes?.find(
+    (s) => Number(s.size) === Number(selectedSize)
+  );
 
   if (!product) return null;
-
+  
   return (
     <div
       className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm"
@@ -131,8 +134,14 @@ const QuickViewPopup = ({ product, onClose }) => {
 
             {/* Chọn số lượng */}
             <div className="flex items-center gap-2 mb-4">
-              <button
-                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                <button
+                onClick={() =>
+                  setQuantity((q) =>
+                    selectedProductSize
+                      ? Math.min(q - 1, selectedProductSize.stock)
+                      : q - 1
+                  )
+                }
                 className="w-8 h-8 border rounded hover:bg-gray-100"
               >
                 -
@@ -146,11 +155,18 @@ const QuickViewPopup = ({ product, onClose }) => {
                 }
               />
               <button
-                onClick={() => setQuantity((q) => q + 1)}
+                onClick={() =>
+                  setQuantity((q) =>
+                    selectedProductSize
+                      ? Math.min(q + 1, selectedProductSize.stock)
+                      : q + 1
+                  )
+                }
                 className="w-8 h-8 border rounded hover:bg-gray-100"
               >
                 +
               </button>
+
             </div>
           </div>
 
@@ -158,14 +174,29 @@ const QuickViewPopup = ({ product, onClose }) => {
           <div className="flex justify-end">
             <button
               className="px-6 py-3 text-white bg-black rounded-md hover:bg-gray-800"
-              onClick={() => {
-                if (!selectedSize) {
-                  setShowWarning(true);
-                  return;
-                }
-                addToCart(product, quantity, selectedSize);
-                onClose();
-              }}
+           onClick={() => {
+          if (!selectedProductSize) {
+            setShowWarning(true);
+            return;
+          }
+
+          addToCart(
+            {
+              id: selectedProductSize.id,
+              size: selectedProductSize.size,
+              product: {
+                id: product.id,
+                name: product.name,
+                price: product.discountPrice || product.price,
+                images: product.images,
+              },
+            },
+            quantity
+          );
+
+          onClose();
+        }}
+
             >
               Thêm vào giỏ hàng
             </button>

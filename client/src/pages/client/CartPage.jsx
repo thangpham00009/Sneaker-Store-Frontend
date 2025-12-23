@@ -131,7 +131,7 @@ const CartPage = () => {
                         <td className="p-4 text-center">
                           <button
                             className="text-gray-500 hover:text-red-500"
-                            onClick={() => removeFromCart(item.key)}
+                            onClick={() => removeFromCart(item.productSizeId)}
                           >
                             <FaTrashAlt />
                           </button>

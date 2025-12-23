@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import productAPI from "../../api/product.api";
 import Header from "./components/Header";
 import Navbar from "./components/Navbar";
@@ -7,22 +7,22 @@ import Breadcrumb from "@/components/Breadcrumb";
 import Footer from "./components/Footer";
 import { useCart } from "../../context/CartProvider";
 import WarningModalSize from "./components/WarningModalSize";
-import {  Folder, Home, Package } from "lucide-react";
+import { Folder, Home, Package } from "lucide-react";
 
 export default function ProductDetailPage() {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [activeImage, setActiveImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useCart();
   const [showWarning, setShowWarning] = useState(false);
-  
+
   // Danh sách size chuẩn
   const sizes = [
-    36.5, 37, 37.5, 38, 38.5, 39,
-    40, 40.5, 41, 41.5, 42, 42.5,
-    43, 43.5, 44, 44.5, 45, 45.5, 46, 46.5
+    36.5, 37, 37.5, 38, 38.5, 39, 40, 40.5, 41, 41.5, 42, 42.5, 43, 43.5, 44,
+    44.5, 45, 45.5, 46, 46.5,
   ];
 
   useEffect(() => {
@@ -45,10 +45,13 @@ export default function ProductDetailPage() {
     sizeMap[String(s.size)] = s.stock;
   });
 
-
   const selectedStock =
-  selectedSize !== null ? sizeMap[String(selectedSize)] : null;
+    selectedSize !== null ? sizeMap[String(selectedSize)] : null;
   const isOutOfStock = selectedStock === 0;
+  
+  const selectedProductSize = product.sizes?.find(
+    (s) => Number(s.size) === Number(selectedSize)
+  );
 
   return (
     <>
@@ -58,13 +61,13 @@ export default function ProductDetailPage() {
       <Breadcrumb
         className="mx-6 my-4"
         items={[
-          { label: "Trang chủ", href: "/",icon: <Home size={14}/> },
+          { label: "Trang chủ", href: "/", icon: <Home size={14} /> },
           {
             label: product.categories[0]?.name || "Danh mục",
             href: `/danh-muc/${product.categories[0]?.slug}`,
-             icon: <Folder className="w-4 h-4" />
+            icon: <Folder className="w-4 h-4" />,
           },
-          { label: product.name , icon: <Package  className="w-4 h-4" /> },
+          { label: product.name, icon: <Package className="w-4 h-4" /> },
         ]}
       />
 
@@ -77,21 +80,21 @@ export default function ProductDetailPage() {
             onMouseMove={(e) => {
               const zoomImg = document.getElementById("zoom-image");
               const rect = e.currentTarget.getBoundingClientRect();
-              const xPercent =
-                ((e.clientX - rect.left) / rect.width) * 100;
-              const yPercent =
-                ((e.clientY - rect.top) / rect.height) * 100;
+              const xPercent = ((e.clientX - rect.left) / rect.width) * 100;
+              const yPercent = ((e.clientY - rect.top) / rect.height) * 100;
               zoomImg.style.transformOrigin = `${xPercent}% ${yPercent}%`;
             }}
             onMouseEnter={() => {
               const zoomDiv = document.getElementById("zoom-div");
               zoomDiv.style.display = "block";
-              document.getElementById("zoom-image").style.transform = "scale(2)";
+              document.getElementById("zoom-image").style.transform =
+                "scale(2)";
             }}
             onMouseLeave={() => {
               const zoomDiv = document.getElementById("zoom-div");
               zoomDiv.style.display = "none";
-              document.getElementById("zoom-image").style.transform = "scale(1)";
+              document.getElementById("zoom-image").style.transform =
+                "scale(1)";
             }}
           >
             <img
@@ -168,33 +171,39 @@ export default function ProductDetailPage() {
                   const disabled = !exists || stock === 0;
 
                   return (
-                  <div
-                  key={size}
-                 onClick={() => !disabled && setSelectedSize(String(size))}
-                  className={`
+                    <div
+                      key={size}
+                      onClick={() => !disabled && setSelectedSize(String(size))}
+                      className={`
                     relative cursor-pointer border rounded text-center py-2 select-none transition
                     ${
                       selectedSize === String(size) && !disabled
                         ? "bg-red-500 text-white font-semibold"
                         : "hover:border-red-500"
                     }
-                    ${disabled ? "text-gray-400 bg-gray-100 cursor-not-allowed" : ""}
+                    ${
+                      disabled
+                        ? "text-gray-400 bg-gray-100 cursor-not-allowed"
+                        : ""
+                    }
                   `}
-                >
-                  {size}
+                    >
+                      {size}
 
-                  {!exists && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="relative flex items-center justify-center w-full h-full">
-                        <div className="absolute w-[70%] h-[2px] bg-blue-200 rotate-45 rounded-full"></div>
-                        <div className="absolute w-[70%] h-[2px] bg-blue-200 -rotate-45 rounded-full"></div>
-                      </div>
+                      {!exists && (
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <div className="relative flex items-center justify-center w-full h-full">
+                            <div className="absolute w-[70%] h-[2px] bg-blue-200 rotate-45 rounded-full"></div>
+                            <div className="absolute w-[70%] h-[2px] bg-blue-200 -rotate-45 rounded-full"></div>
+                          </div>
+                        </div>
+                      )}
+                      {exists && stock === 0 && (
+                        <p className="text-[10px] text-red-500 mt-1">
+                          Hết hàng
+                        </p>
+                      )}
                     </div>
-                  )}
-                  {exists && stock === 0 && (
-                    <p className="text-[10px] text-red-500 mt-1">Hết hàng</p>
-                  )}
-                  </div>
                   );
                 })}
               </div>
@@ -206,11 +215,19 @@ export default function ProductDetailPage() {
               <input
                 type="number"
                 min={1}
+                max={selectedStock ?? 1}
+                disabled={!selectedSize}
                 value={quantity}
-                onChange={(e) =>
-                  setQuantity(parseInt(e.target.value) || 1)
-                }
-                className="w-24 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-red-500"
+                onChange={(e) => {
+                  let val = parseInt(e.target.value) || 1;
+
+                  if (selectedStock && val > selectedStock) {
+                    val = selectedStock;
+                  }
+
+                  setQuantity(val);
+                }}
+                className="w-24 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-red-500 disabled:bg-gray-100"
               />
             </div>
           </div>
@@ -242,60 +259,72 @@ export default function ProductDetailPage() {
                       return;
                     }
 
+                    if (selectedStock !== null && quantity > selectedStock) {
+                      alert("Số lượng vượt tồn kho");
+                      return;
+                    }
+
+                    if (!selectedProductSize) {
+                      setShowWarning(true);
+                      return;
+                    }
+
                     addToCart(
                       {
-                        id: product.id,
-                        name: product.name,
-                        price:
-                          product.discountPrice || product.price,
-                        images: product.images,
+                        id: selectedProductSize.id,
+                        size: selectedProductSize.size,
+                        product: {
+                          id: product.id,
+                          name: product.name,
+                          price: product.discountPrice || product.price,
+                          images: product.images,
+                        },
                       },
-                      quantity,
-                      selectedSize
+                      quantity
                     );
-                    console.log("Selected size:", selectedSize, typeof selectedSize);
                   }}
                 >
                   Thêm vào giỏ hàng
                 </button>
 
+                <button
+                  className="flex-1 px-6 py-3 font-semibold text-white uppercase transition bg-red-600 rounded-lg hover:bg-red-700"
+                  onClick={() => {
+                    if (!selectedSize) {
+                      setShowWarning(true);
+                      return;
+                    }
 
-               <button
-              className="flex-1 px-6 py-3 font-semibold text-white uppercase transition bg-red-600 rounded-lg hover:bg-red-700"
-              onClick={() => {
-                if (!selectedSize) {
-                  setShowWarning(true);
-                  return;
-                }
+                    const checkoutItem = {
+                      product: {
+                        id: product.id,
+                        name: product.name,
+                        price: product.discountPrice || product.price,
+                        images: product.images,
+                      },
+                      quantity,
+                      size: selectedSize,
+                    };
 
-                const checkoutItem = {
-                  product: {
-                    id: product.id,
-                    name: product.name,
-                    price: product.discountPrice || product.price,
-                    images: product.images,
-                  },
-                  quantity,
-                  size: selectedSize,
-                };
-
-                navigate("/checkout", {
-                  state: {
-                    buyNow: true,
-                    items: [checkoutItem],
-                  },
-                });
-              }}
-            >
-              Mua ngay
-            </button>
-
+                    navigate("/checkout", {
+                      state: {
+                        buyNow: true,
+                        items: [checkoutItem],
+                      },
+                    });
+                  }}
+                >
+                  Mua ngay
+                </button>
               </>
             )}
           </div>
         </div>
       </div>
-      <WarningModalSize open={showWarning} onClose={() => setShowWarning(false)} />
+      <WarningModalSize
+        open={showWarning}
+        onClose={() => setShowWarning(false)}
+      />
 
       <Footer />
     </>

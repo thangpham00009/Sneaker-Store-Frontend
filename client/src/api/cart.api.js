@@ -1,22 +1,20 @@
 import { apiClient } from "../services/apiClient";
 
 export const cartAPI = {
-  // Lấy giỏ hàng của user
+  // Lấy giỏ hàng
   getCart: () => apiClient.get("/cart"),
 
-  // Thêm sản phẩm vào giỏ
+  // Thêm sản phẩm
   addToCart: (data) => apiClient.post("/cart", data),
 
-  // Cập nhật số lượng sản phẩm trong giỏ
+  // Cập nhật số lượng
   updateCartItem: (data) => apiClient.put("/cart", data),
 
-  // Xóa 1 item khỏi giỏ theo productId
-    removeCartItem: (productId, size) =>
-      apiClient.delete(`/cart/${productId}`, {
-        params: { size },
-      }),
+  // Xóa 1 item
+  removeCartItem: (productSizeId) =>
+    apiClient.delete(`/cart/${productSizeId}`),
 
-  // Xóa toàn bộ giỏ hàng
+  // Xóa toàn bộ cart
   clearCart: () => apiClient.delete("/cart"),
 };
 

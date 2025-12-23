@@ -5,8 +5,8 @@ import { useSelector, useDispatch } from "react-redux";
 import { logoutUser } from "@/redux/slices/userAuthSlice";
 import paymentAPI from "@/api/payment_method.api";
 import { fetchProvinces, fetchDistricts, fetchWards } from "@/api/address.api";
+import orderAPI from "@/api/order.api";
 
-/* ================== HELPERS ================== */
 const normalize = (str = "") =>
   str
     .toLowerCase()
@@ -35,7 +35,8 @@ const CheckoutPage = () => {
 
   /* ================== PAYMENT ================== */
   const [paymentMethods, setPaymentMethods] = useState([]);
-  const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState(null);
+
 
   /* ================== ADDRESS BOOK ================== */
   const [addressBook, setAddressBook] = useState([]);
@@ -53,29 +54,57 @@ const CheckoutPage = () => {
   const [shippingInfo, setShippingInfo] = useState({
     name: "",
     phone: "",
+    email: "",  
     address: "",
     province: "",
     district: "",
     ward: "",
     note: "",
   });
+    const buildShippingPayload = () => ({
+    name: shippingInfo.name,
+    phone: shippingInfo.phone,
+    address_line: shippingInfo.address,
+    ward: shippingInfo.ward,
+    district: shippingInfo.district,
+    city: shippingInfo.province,
+    note: shippingInfo.note,
+  });
 
   const isUsingSavedAddress = selectedAddressId !== "other";
 
   /* ================== LOAD CART ================== */
   useEffect(() => {
-    if (location.state?.buyNow && location.state?.items) {
-      setItems(location.state.items);
-    } else {
-      setItems(
-        cart.map((i) => ({
-          product: i.product ?? i,
-          quantity: i.quantity,
-          size: i.size,
-        }))
-      );
-    }
-  }, [cart, location]);
+  if (location.state?.buyNow && location.state?.items) {
+    setItems(location.state.items);
+  } else {
+    setItems(
+      cart.map((i) => ({
+        product_size_id: i.productSizeId,  
+        quantity: i.quantity,
+        price: i.product.discountPrice ?? i.product.price,
+        product: i.product,
+        size: i.size,
+      }))
+    );
+  }
+}, [cart, location]);
+useEffect(() => {
+  if (location.state?.buyNow && location.state?.items) {
+    setItems(location.state.items);
+  } else {
+    setItems(
+      cart.map((i) => ({
+        product_size_id: i.productSizeId, 
+        quantity: i.quantity,
+        price: i.product.discountPrice ?? i.product.price,
+        product: i.product,
+        size: i.size,
+      }))
+    );
+  }
+}, [cart, location]);
+
 
   /* ================== LOAD PROVINCES ================== */
   useEffect(() => {
@@ -102,17 +131,21 @@ const CheckoutPage = () => {
   }, [districtId]);
 
   /* ================== LOAD USER ADDRESS ================== */
-  useEffect(() => {
-    if (!isAuthenticated || !user) return;
+useEffect(() => {
+  if (!isAuthenticated || !user) return;
 
-    const addresses = user.addresses || [];
-    setAddressBook(addresses);
+  setShippingInfo((p) => ({
+    ...p,
+    email: user.email || "",
+  }));
 
-    const def = addresses.find((a) => a.is_default);
-    if (!def) return;
+  const addresses = user.addresses || [];
+  setAddressBook(addresses);
 
-    setSelectedAddressId(def.id);
-  }, [isAuthenticated, user]);
+  const def = addresses.find((a) => a.is_default);
+  if (def) setSelectedAddressId(def.id);
+}, [isAuthenticated, user]);
+
 
   /* ================== APPLY ADDRESS WHEN SELECT ================== */
   useEffect(() => {
@@ -185,22 +218,41 @@ const CheckoutPage = () => {
     navigate("/login");
   };
 
-  const handlePlaceOrder = () => {
-    if (!paymentMethod) {
-      alert("Vui lòng chọn phương thức thanh toán");
-      return;
-    }
+const handlePlaceOrder = async () => {
+  if (!paymentMethod) {
+    alert("Vui lòng chọn phương thức thanh toán");
+    return;
+  }
+  if (!shippingInfo.email) {
+    alert("Vui lòng nhập email nhận đơn hàng");
+    return;
+  }
 
-    console.log({
-      items,
-      paymentMethod,
-      shippingInfo,
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(shippingInfo.email)) {
+    alert("Email không đúng định dạng");
+    return;
+  }
+
+  try {
+    await orderAPI.create({
+      items: items.map((i) => ({
+        product_size_id: i.product_size_id,
+        quantity: i.quantity,
+        price: i.price,
+      })),
+      payment_method_id: paymentMethod,
+      shippingInfo: buildShippingPayload(),
       total: subtotal,
     });
 
     alert("Đặt hàng thành công");
     navigate("/");
-  };
+  } catch (err) {
+    console.error(err);
+    alert(err.response?.data?.message || "Đặt hàng thất bại");
+  }
+};
 
   /* ================== UI ================== */
   return (
@@ -226,6 +278,7 @@ const CheckoutPage = () => {
                   setShippingInfo({
                     name: "",
                     phone: "",
+                    email: isAuthenticated ? user?.email || "" : "", 
                     address: "",
                     province: "",
                     district: "",
@@ -263,13 +316,24 @@ const CheckoutPage = () => {
               )}
             </div>
 
-            {isAuthenticated && (
-              <input
-                disabled
-                value={user?.email || ""}
-                className="w-full p-3 bg-gray-100 border rounded"
-              />
-            )}
+                        {/* EMAIL */}
+              {isAuthenticated ? (
+                <input
+                  disabled
+                  value={user?.email || ""}
+                  className="w-full p-3 bg-gray-100 border rounded"
+                />
+              ) : (
+                <input
+                  placeholder="Email nhận đơn hàng"
+                  value={shippingInfo.email}
+                  onChange={(e) =>
+                    setShippingInfo((p) => ({ ...p, email: e.target.value }))
+                  }
+                  className="w-full p-3 border rounded"
+                />
+              )}
+
 
             <input
               disabled={isUsingSavedAddress}
@@ -396,22 +460,36 @@ const CheckoutPage = () => {
           </div>
           <h2 className="text-lg font-semibold">Thanh toán</h2>
 
-          {paymentMethods.map((m) => (
-            <label
-              key={`pay-${m.id}`}
-              className={`flex items-center gap-3 p-4 border rounded cursor-pointer ${
-                paymentMethod === m.code ? "border-blue-500 bg-blue-50" : ""
-              }`}
-            >
-              <input
-                type="radio"
-                checked={paymentMethod === m.code}
-                onChange={() => setPaymentMethod(m.code)}
-              />
-              <img src={m.logo} className="w-8 h-8" />
-              <span>{m.name}</span>
-            </label>
-          ))}
+   {paymentMethods.map((m) => {
+  const isSelected = paymentMethod === m.id;
+
+  return (
+    <label
+      key={`pay-${m.id}`}
+      className={`block p-4 border rounded cursor-pointer ${
+        isSelected ? "border-blue-500 bg-blue-50" : ""
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        <input
+  type="radio"
+  checked={isSelected}
+  onChange={() => setPaymentMethod(m.id)}
+/>
+        <img src={m.logo} alt={m.name} className="w-8 h-8" />
+        <span className="font-medium">{m.name}</span>
+      </div>
+
+      {isSelected && m.description && (
+        <p className="mt-2 text-sm text-gray-600 ml-7">
+          {m.description}
+        </p>
+      )}
+    </label>
+  );
+})}
+
+  
         </div>
 
         {/* ================= RIGHT ================= */}
